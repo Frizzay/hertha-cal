@@ -16,34 +16,37 @@
 
 <a class="skip" href="#main">Zum Inhalt springen</a>
 
-<header class="site-header">
+<!-- Trägt jetzt die Rolle der früheren Kopfzeile: als <header> bleibt die
+     banner-Landmarke für Screenreader erhalten. -->
+<header class="hero">
   <div class="wrap">
-    <a class="brand" href="/">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="7" fill="#ffffff"/>
-        <rect x="7" y="9" width="18" height="16" rx="2.5" fill="#004c9e"/>
-        <rect x="7" y="9" width="18" height="4.5" fill="#0a72d6"/>
-        <rect x="10.5" y="5.5" width="2.5" height="6" rx="1.25" fill="#004c9e"/>
-        <rect x="19" y="5.5" width="2.5" height="6" rx="1.25" fill="#004c9e"/>
+    <p class="hero-brand">
+      <!-- Strichzeichnung in currentColor: sitzt auf dem Blau, statt als weißes
+           Kachel-Icon daraufgeklebt zu wirken. -->
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="16" rx="3.5"
+              stroke="currentColor" stroke-width="1.7"/>
+        <path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M8.5 2.5v4M15.5 2.5v4"
+              stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <circle cx="8.5" cy="15" r="1.4" fill="currentColor"/>
       </svg>
       <span>Hertha Kalender</span>
-    </a>
-    <a class="header-link" href="#spiele">Nächste Spiele</a>
+    </p>
+
+    <h1>Alle Hertha-Spiele<br>in deinem Kalender.</h1>
+
+    <p class="hero-lead">
+      Einmal abonnieren – 2. Bundesliga und DFB-Pokal landen automatisch in deinem
+      Kalender. Verlegte Partien und kurzfristige Anstoßzeiten aktualisieren sich
+      von selbst. Kein Konto, keine App, keine Cookies.
+    </p>
   </div>
 </header>
 
 <main id="main">
 
   <div class="wrap">
-    <section class="hero">
-      <h1>Alle Hertha-Spiele<br>in deinem Kalender.</h1>
-      <p class="lead">
-        Einmal abonnieren – 2. Bundesliga und DFB-Pokal landen automatisch in deinem
-        Kalender. Verlegte Partien und kurzfristige Anstoßzeiten aktualisieren sich
-        von selbst. Kein Konto, keine App, keine Cookies.
-      </p>
-    </section>
-
     <section class="card subscribe" id="abonnieren" aria-labelledby="abo-title">
       <h2 id="abo-title" class="visually-hidden">Kalender abonnieren</h2>
 

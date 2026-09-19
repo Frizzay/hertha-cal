@@ -42,7 +42,12 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Verhindert, dass iOS Safari im Querformat einzelne Textblöcke aufbläht. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -100,8 +105,65 @@ a:hover { color: var(--accent-hover); }
 
 /* ---------- Hero ---------- */
 
-.hero { padding: clamp(2.5rem, 7vw, 5rem) 0 1rem; }
-.hero .lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--text-muted); max-width: 46ch; }
+.hero {
+  background: linear-gradient(158deg, var(--blue-700) 0%, var(--blue-900) 100%);
+  color: #fff;
+  /* viewport-fit=cover, also muss die Notch-Höhe oben dazu. */
+  padding-top: calc(clamp(2rem, 6vw, 3.25rem) + env(safe-area-inset-top, 0px));
+  /* Unten extra Luft, in die sich die Abo-Karte hineinschiebt. */
+  padding-bottom: clamp(4.5rem, 10vw, 7rem);
+}
+@media (prefers-color-scheme: dark) {
+  /*
+   * Ein diagonaler Verlauf endet entlang der Unterkante in jeder Spalte in
+   * einer anderen Farbe. Im dunklen Schema liegt der Seitenhintergrund so nah
+   * daran, dass daraus keine Kante mit Absicht wird, sondern eine sichtbare
+   * Naht - links und rechts neben der Karte am deutlichsten.
+   *
+   * Der Grundverlauf läuft deshalb senkrecht und endet exakt auf var(--bg):
+   * Die Unterkante trifft die Seitenfarbe damit in jeder Spalte punktgenau.
+   * Die Helligkeit oben links, die vorher der diagonale Verlauf gebracht hat,
+   * übernimmt ein radialer Schimmer - der sitzt weit weg von der Kante.
+   */
+  .hero {
+    background:
+      radial-gradient(85% 70% at 18% 0%, rgba(0, 104, 204, 0.5) 0%, rgba(0, 104, 204, 0) 68%),
+      linear-gradient(to bottom, var(--blue-800) 0%, var(--bg) 100%);
+  }
+}
+
+/* Dezentes Pill-Badge statt losem Icon neben Text.
+   Der Abstand zum Icon steht bewusst als margin am SVG und nicht als gap:
+   Flexbox-gap kennt iOS Safari erst ab 14.1, davor klebten Icon und Text
+   aneinander. Eine @supports-Abfrage hilft hier nicht, weil diese Browser
+   gap fuer Grid sehr wohl unterstuetzen. */
+.hero-brand {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 clamp(1.75rem, 5vw, 2.75rem);
+  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  color: #fff;
+}
+.hero-brand svg { display: block; flex: none; opacity: 0.95; margin-right: 0.5rem; }
+
+.hero h1 {
+  color: #fff;
+  margin: 0 0 1rem;
+  max-width: 20ch;
+}
+
+.hero-lead {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  color: #cfe1f6;
+  max-width: 46ch;
+}
 
 /* ---------- Karten ---------- */
 
@@ -113,7 +175,12 @@ a:hover { color: var(--accent-hover); }
   padding: clamp(1.15rem, 3vw, 1.75rem);
 }
 
-.subscribe { margin-top: 2rem; }
+/* Schiebt sich in die untere Kante des Hero hinein. */
+.subscribe {
+  margin-top: clamp(-4rem, -6vw, -2.25rem);
+  position: relative;
+  z-index: 1;
+}
 .field-label { font-weight: 650; font-size: 0.95rem; display: block; margin-bottom: 0.45rem; }
 
 .url-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
