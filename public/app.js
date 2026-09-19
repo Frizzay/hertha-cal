@@ -5,58 +5,119 @@
   var FEED_PATH = '/hertha.ics';
   var MAX_VISIBLE = 12;
 
-  var urlField = document.getElementById('feed-url');
-  var copyBtn = document.getElementById('copy-btn');
-  var copyStatus = document.getElementById('copy-status');
-  var subscribeBtn = document.getElementById('subscribe-btn');
+  var card = document.getElementById('abonnieren');
+  var appleBtn = document.getElementById('apple-btn');
   var googleBtn = document.getElementById('google-btn');
+  var outlookBtn = document.getElementById('outlook-btn');
+  var copyBtn = document.getElementById('copy-btn');
+  var copyNote = document.getElementById('copy-note');
+  var copyStatus = document.getElementById('copy-status');
   var list = document.getElementById('match-list');
   var status = document.getElementById('match-status');
 
   // ---------- Abo-Adressen ----------
 
   /**
-   * Die Abo-Adresse. Der Server trägt PUBLIC_BASE_URL in das Feld ein; das ist
+   * Die Abo-Adresse. Der Server trägt PUBLIC_BASE_URL in data-feed ein; das ist
    * die maßgebliche öffentliche Adresse. Fehlt sie – weil die Variable nicht
    * gesetzt ist oder public/ statisch ausgeliefert wird – zählt die Herkunft
    * der Seite.
    */
   function feedUrl() {
-    var injected = (urlField.value || '').trim();
+    var injected = (card.getAttribute('data-feed') || '').trim();
     if (/^https?:\/\//i.test(injected)) return injected;
     return window.location.origin + FEED_PATH;
   }
 
+  /*
+   * Jede App bekommt den Link, den sie versteht:
+   *   webcal:      Apple Kalender, Outlook am Rechner, Thunderbird
+   *   cid=         Google Kalender im Browser
+   *   addfromweb   Outlook.com und Microsoft 365
+   * Die Outlook-Adresse ist von Microsoft nicht dokumentiert und kann sich
+   * ändern – deshalb bleibt „Andere App“ als verlässlicher Weg bestehen.
+   */
   function render() {
     var httpsUrl = feedUrl();
-    urlField.value = httpsUrl;
-    subscribeBtn.href = httpsUrl.replace(/^https?:/, 'webcal:');
-    googleBtn.href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(httpsUrl);
+    var webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
+
+    appleBtn.href = webcalUrl;
+
+    googleBtn.href =
+      'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(webcalUrl);
+    googleBtn.hidden = false;
+
+    outlookBtn.href =
+      'https://outlook.live.com/calendar/0/addfromweb?url=' +
+      encodeURIComponent(webcalUrl) +
+      '&name=' + encodeURIComponent('Hertha BSC');
+    outlookBtn.hidden = false;
+
+    // Ohne Zwischenablage verspricht der Button nichts, was er nicht halten kann.
+    if (!navigator.clipboard || !window.isSecureContext) {
+      copyNote.textContent = 'Adresse anzeigen';
+    }
+    copyBtn.hidden = false;
   }
 
-  // ---------- Kopieren ----------
+  // ---------- Adresse kopieren ----------
 
-  function flash(message) {
+  var clearTimer = null;
+
+  function say(message, persist) {
+    if (clearTimer) { window.clearTimeout(clearTimer); clearTimer = null; }
     copyStatus.textContent = message;
-    window.setTimeout(function () {
-      copyStatus.textContent = '';
-    }, 4000);
+    if (!persist) {
+      clearTimer = window.setTimeout(function () {
+        copyStatus.textContent = '';
+        clearTimer = null;
+      }, 6000);
+    }
+  }
+
+  /**
+   * Letzter Ausweg: Adresse als markierten Text einblenden. Sie bleibt stehen –
+   * eine Adresse, die mitten beim Einfügen verschwindet, ist schlimmer als gar
+   * keine. Der Fokus bleibt auf dem Button, weil Strg+C auf der Auswahl im
+   * Dokument arbeitet und ein Fokuswechsel sie wieder aufheben könnte.
+   */
+  function revealAddress(message) {
+    say(message, true);
+
+    var code = document.createElement('code');
+    code.className = 'feed-url';
+    code.textContent = feedUrl();
+    copyStatus.appendChild(document.createTextNode(' '));
+    copyStatus.appendChild(code);
+
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(code);
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (e) {
+      // Markieren ist Komfort, nicht Voraussetzung – die Adresse steht ja da.
+    }
   }
 
   copyBtn.addEventListener('click', function () {
-    var done = function () {
-      flash('Adresse kopiert. Jetzt in deiner Kalender-App als Abo einfügen.');
-    };
-    var failed = function () {
-      urlField.select();
-      flash('Kopieren nicht möglich – bitte die markierte Adresse manuell kopieren.');
+    if (!navigator.clipboard || !window.isSecureContext) {
+      revealAddress('Adresse markieren und kopieren:');
+      return;
+    }
+
+    var onFail = function () {
+      revealAddress('Kopieren hat nicht geklappt. Adresse markieren und von Hand kopieren:');
     };
 
-    // navigator.clipboard braucht einen sicheren Kontext (https oder localhost).
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(urlField.value).then(done, failed);
-    } else {
-      failed();
+    // writeText kann in manchen WebViews synchron werfen, nicht nur ablehnen.
+    try {
+      navigator.clipboard.writeText(feedUrl()).then(function () {
+        say('Adresse kopiert. In deiner Kalender-App unter „Kalender abonnieren“ einfügen.');
+      }, onFail);
+    } catch (e) {
+      onFail();
     }
   });
 

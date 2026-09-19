@@ -42,6 +42,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Pflicht, solange Buttons per hidden-Attribut starten: .app setzt display,
+   und das schlägt den Standardwert des Browsers für [hidden]. Ohne diese Regel
+   wären die JS-Buttons ohne JavaScript sichtbar und funktionslos. */
+[hidden] { display: none !important; }
+
 html {
   scroll-behavior: smooth;
   /* Verhindert, dass iOS Safari im Querformat einzelne Textblöcke aufbläht. */
@@ -181,32 +186,50 @@ a:hover { color: var(--accent-hover); }
   position: relative;
   z-index: 1;
 }
-.field-label { font-weight: 650; font-size: 0.95rem; display: block; margin-bottom: 0.45rem; }
 
-.url-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-.url-row input {
-  flex: 1 1 22rem; min-width: 0;
-  font: 0.92rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  padding: 0.75rem 0.85rem;
-  color: var(--text); background: var(--bg);
-  border: 1px solid var(--border); border-radius: 10px;
+/* ---------- App-Auswahl ---------- */
+
+.pick { font-weight: 650; font-size: 1.05rem; margin: 0 0 0.9rem; }
+
+.apps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
 }
 
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  padding: 0.75rem 1.15rem;
-  font: inherit; font-weight: 650; font-size: 0.95rem;
-  border-radius: 10px; border: 1px solid transparent;
-  text-decoration: none; cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+/* Gleiches Gewicht für alle vier: Die Frage ist „welche App?“, nicht
+   „welche Methode?“ - keine Option wird optisch bevorzugt. */
+.app {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: 3.75rem;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
-.btn-primary { background: var(--accent); color: var(--on-accent); }
-.btn-primary:hover { background: var(--accent-hover); color: var(--on-accent); }
-.btn-secondary { background: var(--surface); color: var(--accent); border-color: var(--border); }
-.btn-secondary:hover { background: var(--surface-alt); color: var(--accent-hover); }
+.app:hover { background: var(--surface-alt); border-color: var(--accent); color: var(--text); }
+.app-name { font-weight: 650; font-size: 0.98rem; }
+.app-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
 
-.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem; }
-.actions .btn-primary { font-size: 1rem; padding: 0.85rem 1.5rem; }
+/* Die eingeblendete Adresse: auf jedem Gerät mit einem Tippen markierbar. */
+.feed-url {
+  display: inline-block;
+  font: 0.85rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--surface-alt);
+  color: var(--text);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  user-select: all;
+  -webkit-user-select: all;
+  word-break: break-all;
+}
 
 .hint { font-size: 0.85rem; color: var(--text-muted); margin: 0.85rem 0 0; }
 .hint strong { color: var(--text); font-weight: 650; }
@@ -241,6 +264,12 @@ section { padding: clamp(2.25rem, 5vw, 3.5rem) 0; }
   background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 0.95rem;
 }
 .steps p { margin: 0.2rem 0 0; color: var(--text-muted); font-size: 0.95rem; }
+
+.section-note {
+  margin: 1.5rem 0 0; max-width: 60ch;
+  font-size: 0.9rem; color: var(--text-muted);
+}
+.section-note em { font-style: normal; font-weight: 650; color: var(--text); }
 
 /* ---------- Spielliste ---------- */
 

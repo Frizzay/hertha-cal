@@ -47,34 +47,49 @@
 <main id="main">
 
   <div class="wrap">
-    <section class="card subscribe" id="abonnieren" aria-labelledby="abo-title">
+    <!-- data-feed trägt die Adresse, seit das sichtbare Feld weg ist. Als
+         doppelt gequotetes Attribut passt es genau zu escapeAttr() im Server,
+         der dadurch unverändert bleiben konnte. -->
+    <section class="card subscribe" id="abonnieren" data-feed="{{FEED_URL}}"
+             aria-labelledby="abo-title">
       <h2 id="abo-title" class="visually-hidden">Kalender abonnieren</h2>
 
-      <label class="field-label" for="feed-url">Deine Kalender-Adresse</label>
-      <div class="url-row">
-        <!-- Der Server setzt hier PUBLIC_BASE_URL ein. Ist die Variable nicht
-             gesetzt, bleibt der relative Pfad stehen und app.js ergänzt die
-             Herkunft der Seite. -->
-        <input id="feed-url" type="text" readonly value="{{FEED_URL}}" spellcheck="false"
-               aria-describedby="copy-status">
-        <button class="btn btn-secondary" type="button" id="copy-btn">Kopieren</button>
+      <p class="pick">Welchen Kalender nutzt du?</p>
+
+      <div class="apps">
+        <!-- Echtes href statt "#": ohne JavaScript lädt der Link wenigstens die
+             .ics-Datei herunter, statt gar nichts zu tun. app.js schreibt es
+             danach auf webcal: um. -->
+        <a class="app" id="apple-btn" href="{{FEED_URL}}">
+          <span class="app-name">Apple Kalender</span>
+          <span class="app-note">iPhone, iPad, Mac</span>
+        </a>
+        <!-- Braucht JavaScript für die Adresse, startet daher versteckt. -->
+        <a class="app" id="google-btn" target="_blank" rel="noopener noreferrer" hidden>
+          <span class="app-name">Google Kalender</span>
+          <span class="app-note">am Computer<span class="visually-hidden"> (öffnet in neuem Tab)</span></span>
+        </a>
+        <a class="app" id="outlook-btn" target="_blank" rel="noopener noreferrer" hidden>
+          <span class="app-name">Outlook</span>
+          <span class="app-note">Outlook.com, Microsoft 365<span class="visually-hidden"> (öffnet in neuem Tab)</span></span>
+        </a>
+        <button class="app" type="button" id="copy-btn" hidden>
+          <span class="app-name">Andere App</span>
+          <span class="app-note" id="copy-note">Adresse kopieren</span>
+        </button>
       </div>
+
       <p class="hint" id="copy-status" role="status" aria-live="polite"></p>
 
-      <div class="actions">
-        <a class="btn btn-primary" id="subscribe-btn" href="#">Jetzt abonnieren</a>
-        <a class="btn btn-secondary" id="google-btn" href="#" target="_blank" rel="noopener noreferrer">
-          Google Kalender
-        </a>
-        <a class="btn btn-secondary" id="download-btn" href="/hertha.ics" download="hertha-bsc.ics">
-          .ics herunterladen
-        </a>
-      </div>
-
       <p class="hint">
-        <strong>Abonnieren statt herunterladen:</strong> nur ein Abo aktualisiert sich
-        automatisch. Eine heruntergeladene Datei bleibt auf dem Stand von heute.
+        Am Android-Handy nimmt Google Kalender keine Abos an – das geht nur am
+        Computer. Unterwegs also <strong>„Andere App“</strong> tippen und die Adresse
+        später am Rechner einfügen.
       </p>
+
+      <noscript>
+        <p class="hint">Kalender-Adresse zum Einfügen: <code class="feed-url">{{FEED_URL}}</code></p>
+      </noscript>
 
       <ul class="included">
         <li><span aria-hidden="true">⚽</span> Alle Spiele der 2. Bundesliga</li>
@@ -92,20 +107,31 @@
       </p>
       <ol class="steps">
         <li>
-          <h3>Adresse kopieren</h3>
-          <p>Oben auf „Kopieren“ tippen – mehr ist nicht einzustellen.</p>
+          <h3>Kalender auswählen</h3>
+          <p>Oben auf die App tippen, die du nutzt. Mehr ist nicht einzustellen.</p>
         </li>
         <li>
-          <h3>Kalender-App öffnen</h3>
-          <p><em>Apple:</em> Kalender → Ablage → Neues Kalenderabo.
-             <em>Google:</em> Andere Kalender → Per URL.
-             <em>Outlook:</em> Kalender hinzufügen → Aus dem Internet abonnieren.</p>
+          <h3>Einmal bestätigen</h3>
+          <p>Deine Kalender-App fragt nach, ob sie das Abo anlegen soll. Bestätigen – fertig.</p>
         </li>
         <li>
-          <h3>Einfügen und fertig</h3>
+          <h3>Läuft von allein</h3>
           <p>Ab jetzt aktualisiert deine App den Spielplan selbstständig – meist ein- bis zweimal am Tag.</p>
         </li>
       </ol>
+
+      <p class="section-note">
+        Steht deine App nicht dabei? „Andere App“ kopiert die Adresse. Einfügen unter
+        <em>Apple:</em> Kalender → Ablage → Neues Kalenderabo.
+        <em>Google:</em> Andere Kalender → Per URL.
+        <em>Outlook:</em> Kalender hinzufügen → Aus dem Internet abonnieren.
+      </p>
+
+      <p class="section-note">
+        Lieber nur eine Momentaufnahme? <a href="/hertha.ics" download="hertha-bsc.ics">Die
+        .ics-Datei einmalig herunterladen</a> – sie aktualisiert sich allerdings nie wieder,
+        verlegte Spiele fehlen dort später.
+      </p>
     </section>
 
     <section id="spiele" aria-labelledby="spiele-title">

@@ -22,7 +22,18 @@ describe('landing page', () => {
   test('carries a usable subscription address', () => {
     // PUBLIC_BASE_URL is unset in the test environment, so the relative path
     // stays put and the browser resolves it against its own origin.
-    assert.match(landingPage, /id="feed-url"[^>]*value="[^"]+"/);
+    assert.match(landingPage, /id="abonnieren"[^>]*data-feed="[^"]+"/);
+  });
+
+  test('ships the JavaScript-only controls hidden', () => {
+    // They cannot work before app.js runs, so they must not be visible then.
+    for (const id of ['google-btn', 'outlook-btn', 'copy-btn']) {
+      assert.match(landingPage, new RegExp(`id="${id}"[^>]*hidden`), id);
+    }
+  });
+
+  test('gives the primary control a real href rather than a dead anchor', () => {
+    assert.match(landingPage, /id="apple-btn" href="[^"#]+"/);
   });
 });
 
