@@ -112,12 +112,22 @@ a:hover { color: var(--accent-hover); }
   .hero { background: linear-gradient(158deg, var(--blue-800) 0%, #050f1b 100%); }
 }
 
+/* Dezentes Pill-Badge statt losem Icon neben Text. */
 .hero-brand {
-  display: inline-flex; align-items: center; gap: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0 0 clamp(1.75rem, 5vw, 2.75rem);
-  font-size: 1rem; font-weight: 750; letter-spacing: -0.01em; color: #fff;
+  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  color: #fff;
 }
-.hero-brand svg { display: block; flex: none; }
+.hero-brand svg { display: block; flex: none; opacity: 0.95; }
 
 .hero h1 {
   color: #fff;
