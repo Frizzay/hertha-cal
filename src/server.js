@@ -120,30 +120,73 @@ function escapeAttr(value) {
     .replace(/"/g, '&quot;');
 }
 
-/*
- * The address shown on the landing page has to be the canonical public one, not
- * whatever host the browser happened to reach the container on. PUBLIC_BASE_URL
- * is set by the operator, so it is baked into the page once at start-up.
- *
- * When it is unset the placeholder falls back to the relative path, which still
- * reads sensibly without JavaScript, and app.js turns it into an absolute URL
- * using the page's own origin. The request's Host header is deliberately NOT
- * used here: it is attacker-controlled, and this value lands in the markup.
+/**
+ * Short content hash of a file in public/. It goes into the asset URLs so a
+ * changed stylesheet reaches browsers immediately: without it the URL stays
+ * identical, the cached copy stays valid for its full max-age, and an edit
+ * simply does not show up.
  */
-const landingPage = readFileSync(path.join(publicDir, 'index.html'), 'utf8').replaceAll(
-  '{{FEED_URL}}',
-  config.publicBaseUrl ? escapeAttr(`${config.publicBaseUrl}${FEED_PATH}`) : FEED_PATH,
-);
+function assetVersion(file) {
+  try {
+    return createHash('sha256')
+      .update(readFileSync(path.join(publicDir, file)))
+      .digest('base64url')
+      .slice(0, 10);
+  } catch {
+    return 'dev';
+  }
+}
 
-// Registered ahead of express.static, which would otherwise serve the raw file.
-app.get(['/', '/index.html'], (req, res) => {
-  res.type('html').send(landingPage);
-});
+/**
+ * Fills in the placeholders of a page in public/.
+ *
+ * FEED_URL: the address shown on the landing page has to be the canonical
+ * public one, not whatever host the browser happened to reach the container on.
+ * PUBLIC_BASE_URL is set by the operator, so it is baked in here. When it is
+ * unset the placeholder falls back to the relative path, which still reads
+ * sensibly without JavaScript, and app.js turns it into an absolute URL using
+ * the page's own origin. The request's Host header is deliberately NOT used:
+ * it is attacker-controlled, and this value lands in the markup.
+ */
+function renderPage(file) {
+  return readFileSync(path.join(publicDir, file), 'utf8')
+    .replaceAll(
+      '{{FEED_URL}}',
+      config.publicBaseUrl ? escapeAttr(`${config.publicBaseUrl}${FEED_PATH}`) : FEED_PATH,
+    )
+    .replaceAll('{{CSS_V}}', assetVersion('styles.css'))
+    .replaceAll('{{JS_V}}', assetVersion('app.js'));
+}
 
-app.get('/impressum', (req, res) => res.sendFile(path.join(publicDir, 'impressum.html')));
-app.get('/datenschutz', (req, res) => res.sendFile(path.join(publicDir, 'datenschutz.html')));
+// Rendered once in production. In development every request re-reads the file,
+// so editing markup or CSS only takes a reload rather than a restart.
+const cachePages = process.env.NODE_ENV === 'production';
+const rendered = new Map();
+function page(file) {
+  if (!cachePages) return renderPage(file);
+  if (!rendered.has(file)) rendered.set(file, renderPage(file));
+  return rendered.get(file);
+}
 
-app.use(express.static(publicDir, { extensions: ['html'], maxAge: '1h' }));
+function sendPage(file) {
+  return (req, res) => {
+    // The HTML carries the asset URLs, so it must never be held without
+    // revalidating - otherwise a deploy still serves yesterday's asset links.
+    res.setHeader('Cache-Control', 'no-cache');
+    res.type('html').send(page(file));
+  };
+}
+
+// Registered ahead of express.static, which would otherwise serve the raw files
+// including their unsubstituted placeholders.
+// The .html paths are listed too: express.static would otherwise hand those
+// files out raw, placeholders and all.
+app.get(['/', '/index.html'], sendPage('index.html'));
+app.get(['/impressum', '/impressum.html'], sendPage('impressum.html'));
+app.get(['/datenschutz', '/datenschutz.html'], sendPage('datenschutz.html'));
+
+// Assets are addressed by content hash, so they can be cached hard.
+app.use(express.static(publicDir, { extensions: ['html'], maxAge: '7d' }));
 
 app.use((req, res) => {
   res.status(404).type('text/plain; charset=utf-8').send('404 – Seite nicht gefunden\n');
@@ -167,5 +210,8 @@ if (isEntrypoint) {
     setInterval(() => cache.warm(), Math.max(60_000, config.cacheTtlMs)).unref();
   });
 }
+
+// Exposed so tests can assert no placeholder ever reaches a visitor.
+const landingPage = renderPage('index.html');
 
 export { app, cache, landingPage };

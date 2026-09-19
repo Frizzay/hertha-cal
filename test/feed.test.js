@@ -19,6 +19,13 @@ describe('landing page', () => {
     assert.ok(!landingPage.includes('{{'), 'no template placeholder survives');
   });
 
+  test('versions its asset URLs so a changed stylesheet actually reaches browsers', () => {
+    // Without this the URL never changes, the cached copy stays valid for its
+    // full max-age, and an edit simply does not show up.
+    assert.match(landingPage, /href="\/styles\.css\?v=[A-Za-z0-9_-]+"/);
+    assert.match(landingPage, /src="\/app\.js\?v=[A-Za-z0-9_-]+"/);
+  });
+
   test('carries a usable subscription address', () => {
     // PUBLIC_BASE_URL is unset in the test environment, so the relative path
     // stays put and the browser resolves it against its own origin.
