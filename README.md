@@ -65,6 +65,31 @@ danach das Image für `linux/amd64` und `linux/arm64` nach
 Der Workflow braucht keine Secrets – das automatisch bereitgestellte
 `GITHUB_TOKEN` genügt.
 
+### Sicherheitsprüfung
+
+Zwischen Bauen und Pushen scannt [Trivy](https://trivy.dev/) das fertige Image.
+**Findet er eine Schwachstelle der Stufe `HIGH` oder `CRITICAL`, schlägt der Job
+fehl und es wird nichts veröffentlicht.** Geprüft werden Betriebssystempakete
+des Base-Image und die npm-Abhängigkeiten.
+
+Der vollständige Bericht steht anschließend in der Zusammenfassung des Runs.
+
+Zwei Stellschrauben in `.github/workflows/docker.yml`:
+
+| Eingabe | Standard | Wirkung |
+|---|---|---|
+| `severity` | `HIGH,CRITICAL` | ab welcher Stufe der Build scheitert |
+| `ignore-unfixed` | `'false'` | auch Lücken ohne verfügbaren Fix blockieren |
+
+`ignore-unfixed: 'false'` heißt: Der Build kann auch an etwas scheitern, für das
+es noch gar keinen Patch gibt – dann hilft nur warten oder das Base-Image
+wechseln. Wer nur auf behebbare Funde reagieren möchte, setzt den Wert auf
+`'true'`.
+
+Gescannt wird nur `linux/amd64`. Die OS-Pakete und npm-Abhängigkeiten sind auf
+beiden Architekturen dieselben, und ein Multi-Arch-Image lässt sich nicht in den
+lokalen Docker-Daemon laden.
+
 ### Auf dem Server deployen
 
 ```bash

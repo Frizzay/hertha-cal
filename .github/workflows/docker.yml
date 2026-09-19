@@ -42,7 +42,7 @@ jobs:
         run: npm test
 
   build:
-    name: Build and push
+    name: Build, scan and push
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -85,6 +85,57 @@ jobs:
           labels: |
             org.opencontainers.image.title=hertha-cal
             org.opencontainers.image.description=Kalender-Abo mit allen Pflichtspielen von Hertha BSC
+
+      # Built and scanned before anything is pushed - a vulnerable image must
+      # never reach the registry in the first place.
+      - name: Build image for scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Single platform on purpose: buildx cannot load a multi-arch image
+          # into the local daemon, and OS packages and npm dependencies are
+          # identical across the two architectures anyway.
+          platforms: linux/amd64
+          load: true
+          tags: hertha-cal:scan
+          cache-from: type=gha
+          provenance: false
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: hertha-cal:scan
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          # Anything HIGH or above fails the job and blocks the push.
+          exit-code: '1'
+          # Set to 'true' to gate only on vulnerabilities that actually have a
+          # fix available. Left off so nothing HIGH or above passes silently.
+          ignore-unfixed: 'false'
+          format: table
+          output: trivy-report.txt
+
+      - name: Add scan result to the run summary
+        # Runs on success and on failure - the report matters most when the
+        # gate has just blocked a push.
+        if: always()
+        run: |
+          {
+            echo "### Trivy scan (HIGH and CRITICAL)"
+            echo
+            echo '```'
+            if [ ! -f trivy-report.txt ]; then
+              # Never report a clean bill of health for a scan that never ran.
+              echo "No report was produced - the scan step itself failed. See its log."
+            elif [ -s trivy-report.txt ]; then
+              # The step summary caps out at 1 MB.
+              head -c 200000 trivy-report.txt
+            else
+              echo "No HIGH or CRITICAL vulnerabilities found."
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build and push
         id: push
