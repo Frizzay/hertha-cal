@@ -25,8 +25,9 @@ Es gibt genau einen Feed ohne Parameter und ohne Einstellungen:
 - alle Pflichtspiele der Saison, gespielte Partien inklusive
 - Titel mit vorangestelltem Emoji: ⚽ für die 2. Bundesliga, 🏆 für den DFB-Pokal
 - zwei Erinnerungen je Termin – 30 und 5 Minuten vor Anpfiff
-- Endstand im Titel, sobald abgepfiffen ist (`n.V.` bzw. `n.E.` bei Verlängerung
-  oder Elfmeterschießen)
+- Endstand in den Notizen des Termins, sobald abgepfiffen ist (`n.V.` bzw. `n.E.`
+  bei Verlängerung oder Elfmeterschießen) – der Titel bleibt bewusst frei davon,
+  damit ein Blick in den Kalender das Ergebnis nicht verrät
 
 Die Erinnerungen stecken als `VALARM` im Termin. Wer sie nicht möchte, schaltet
 die Benachrichtigungen für diesen Kalender in seiner App ab – das lässt sich in

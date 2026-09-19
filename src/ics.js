@@ -106,14 +106,14 @@ function scoreSuffix(kind) {
   return '';
 }
 
-/** Event title, prefixed with the competition emoji. */
+/**
+ * Event title: competition emoji and the pairing, nothing else. The result
+ * stays out of it deliberately and lives in the description, so a glance at the
+ * calendar never spoils a match that has not been watched yet.
+ */
 function matchTitle(match) {
   const prefix = match.emoji ? `${match.emoji} ` : '';
-  const pairing = `${match.homeTeam} – ${match.awayTeam}`;
-  if (match.finished && match.score) {
-    return `${prefix}${pairing} ${match.score.home}:${match.score.away}${scoreSuffix(match.score.kind)}`;
-  }
-  return `${prefix}${pairing}`;
+  return `${prefix}${match.homeTeam} – ${match.awayTeam}`;
 }
 
 function matchVenue(match) {

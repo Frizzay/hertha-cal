@@ -187,16 +187,42 @@ describe('buildCalendar', () => {
     assert.equal(summary, 'SUMMARY:VfL Bochum – Hertha BSC');
   });
 
-  test('appends the final score once a match is finished', () => {
+  test('keeps the result out of the title of a finished match', () => {
     const match = makeMatch({ finished: true, score: { home: 0, away: 1, kind: 'After90Minutes' } });
     const summary = logicalLines(buildCalendar([match], options)).find((l) => l.startsWith('SUMMARY:'));
-    assert.equal(summary, 'SUMMARY:⚽ VfL Bochum – Hertha BSC 0:1');
+    assert.equal(summary, 'SUMMARY:⚽ VfL Bochum – Hertha BSC');
+  });
+
+  test('titles a finished match exactly like an upcoming one', () => {
+    const title = (match) =>
+      logicalLines(buildCalendar([match], options)).find((l) => l.startsWith('SUMMARY:'));
+    const played = makeMatch({ finished: true, score: { home: 4, away: 0, kind: 'After90Minutes' } });
+    assert.equal(title(played), title(makeMatch()));
+  });
+
+  test('reports the result in the description instead', () => {
+    const match = makeMatch({ finished: true, score: { home: 0, away: 1, kind: 'After90Minutes' } });
+    const description = logicalLines(buildCalendar([match], options)).find((l) =>
+      l.startsWith('DESCRIPTION:'),
+    );
+    assert.ok(description.includes('Endstand: 0:1'), description);
   });
 
   test('marks results decided after extra time or penalties', () => {
     const shootout = makeMatch({ finished: true, score: { home: 3, away: 4, kind: 'AfterPenalties' } });
-    const summary = logicalLines(buildCalendar([shootout], options)).find((l) => l.startsWith('SUMMARY:'));
-    assert.ok(summary.endsWith('3:4 n.E.'));
+    const description = logicalLines(buildCalendar([shootout], options)).find((l) =>
+      l.startsWith('DESCRIPTION:'),
+    );
+    assert.ok(description.includes('Endstand: 3:4 n.E.'), description);
+  });
+
+  test('does not leak the score into the reminder text', () => {
+    const match = makeMatch({ finished: true, score: { home: 2, away: 1, kind: 'After90Minutes' } });
+    const alarmLines = logicalLines(buildCalendar([match], options)).filter(
+      (l) => l.startsWith('DESCRIPTION:') && l.includes('Anstoß in'),
+    );
+    assert.equal(alarmLines.length, 2);
+    for (const line of alarmLines) assert.ok(!line.includes('2:1'), line);
   });
 
   test('gives every event a reminder 30 and 5 minutes before kickoff', () => {
