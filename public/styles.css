@@ -102,13 +102,6 @@ a:hover { color: var(--accent-hover); }
 
 .hero { padding: clamp(2.5rem, 7vw, 5rem) 0 1rem; }
 .hero .lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--text-muted); max-width: 46ch; }
-.eyebrow {
-  display: inline-block; text-transform: uppercase; letter-spacing: 0.09em;
-  font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 0.9rem;
-}
-.stripes { display: flex; gap: 4px; margin-bottom: 1.6rem; }
-.stripes i { display: block; height: 6px; width: 34px; border-radius: 3px; background: var(--accent); }
-.stripes i:nth-child(even) { background: var(--border); }
 
 /* ---------- Karten ---------- */
 
