@@ -114,7 +114,22 @@ a:hover { color: var(--accent-hover); }
   padding-bottom: clamp(4.5rem, 10vw, 7rem);
 }
 @media (prefers-color-scheme: dark) {
-  .hero { background: linear-gradient(158deg, var(--blue-800) 0%, #050f1b 100%); }
+  /*
+   * Ein diagonaler Verlauf endet entlang der Unterkante in jeder Spalte in
+   * einer anderen Farbe. Im dunklen Schema liegt der Seitenhintergrund so nah
+   * daran, dass daraus keine Kante mit Absicht wird, sondern eine sichtbare
+   * Naht - links und rechts neben der Karte am deutlichsten.
+   *
+   * Der Grundverlauf läuft deshalb senkrecht und endet exakt auf var(--bg):
+   * Die Unterkante trifft die Seitenfarbe damit in jeder Spalte punktgenau.
+   * Die Helligkeit oben links, die vorher der diagonale Verlauf gebracht hat,
+   * übernimmt ein radialer Schimmer - der sitzt weit weg von der Kante.
+   */
+  .hero {
+    background:
+      radial-gradient(85% 70% at 18% 0%, rgba(0, 104, 204, 0.5) 0%, rgba(0, 104, 204, 0) 68%),
+      linear-gradient(to bottom, var(--blue-800) 0%, var(--bg) 100%);
+  }
 }
 
 /* Dezentes Pill-Badge statt losem Icon neben Text.
