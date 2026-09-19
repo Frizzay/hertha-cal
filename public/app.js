@@ -15,8 +15,20 @@
 
   // ---------- Abo-Adressen ----------
 
+  /**
+   * Die Abo-Adresse. Der Server trägt PUBLIC_BASE_URL in das Feld ein; das ist
+   * die maßgebliche öffentliche Adresse. Fehlt sie – weil die Variable nicht
+   * gesetzt ist oder public/ statisch ausgeliefert wird – zählt die Herkunft
+   * der Seite.
+   */
+  function feedUrl() {
+    var injected = (urlField.value || '').trim();
+    if (/^https?:\/\//i.test(injected)) return injected;
+    return window.location.origin + FEED_PATH;
+  }
+
   function render() {
-    var httpsUrl = window.location.origin + FEED_PATH;
+    var httpsUrl = feedUrl();
     urlField.value = httpsUrl;
     subscribeBtn.href = httpsUrl.replace(/^https?:/, 'webcal:');
     googleBtn.href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(httpsUrl);

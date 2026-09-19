@@ -5,12 +5,24 @@ import { ALARM_MINUTES, COMPETITIONS, currentSeason, seasonsToFetch } from '../s
 import { MatchCache } from '../src/cache.js';
 // Importing the server must not start a listener. If the entrypoint guard in
 // server.js ever regresses, this test file stops exiting and the run hangs.
-import { app } from '../src/server.js';
+import { app, landingPage } from '../src/server.js';
 
 describe('server module', () => {
   test('exposes an express app without listening', () => {
     assert.equal(typeof app, 'function');
     assert.equal(typeof app.listen, 'function');
+  });
+});
+
+describe('landing page', () => {
+  test('never serves an unsubstituted placeholder', () => {
+    assert.ok(!landingPage.includes('{{'), 'no template placeholder survives');
+  });
+
+  test('carries a usable subscription address', () => {
+    // PUBLIC_BASE_URL is unset in the test environment, so the relative path
+    // stays put and the browser resolves it against its own origin.
+    assert.match(landingPage, /id="feed-url"[^>]*value="[^"]+"/);
   });
 });
 

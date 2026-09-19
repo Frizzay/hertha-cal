@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import express from 'express';
@@ -49,8 +50,10 @@ function uidDomain(site) {
 }
 
 const CALENDAR_NAME = 'Hertha BSC – Spielplan';
+// Canonical feed path. The other two are kept as aliases.
+const FEED_PATH = '/hertha.ics';
 
-app.get(['/hertha.ics', '/calendar.ics', '/hertha-bsc.ics'], async (req, res) => {
+app.get([FEED_PATH, '/calendar.ics', '/hertha-bsc.ics'], async (req, res) => {
   // Express 4 does not catch rejections from async handlers, so everything that
   // can throw stays inside this block — otherwise the request would just hang.
   try {
@@ -108,6 +111,35 @@ app.get('/healthz', (req, res) => {
   });
 });
 
+/** Escapes a value for use inside a double-quoted HTML attribute. */
+function escapeAttr(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/*
+ * The address shown on the landing page has to be the canonical public one, not
+ * whatever host the browser happened to reach the container on. PUBLIC_BASE_URL
+ * is set by the operator, so it is baked into the page once at start-up.
+ *
+ * When it is unset the placeholder falls back to the relative path, which still
+ * reads sensibly without JavaScript, and app.js turns it into an absolute URL
+ * using the page's own origin. The request's Host header is deliberately NOT
+ * used here: it is attacker-controlled, and this value lands in the markup.
+ */
+const landingPage = readFileSync(path.join(publicDir, 'index.html'), 'utf8').replaceAll(
+  '{{FEED_URL}}',
+  config.publicBaseUrl ? escapeAttr(`${config.publicBaseUrl}${FEED_PATH}`) : FEED_PATH,
+);
+
+// Registered ahead of express.static, which would otherwise serve the raw file.
+app.get(['/', '/index.html'], (req, res) => {
+  res.type('html').send(landingPage);
+});
+
 app.get('/impressum', (req, res) => res.sendFile(path.join(publicDir, 'impressum.html')));
 app.get('/datenschutz', (req, res) => res.sendFile(path.join(publicDir, 'datenschutz.html')));
 
@@ -136,4 +168,4 @@ if (isEntrypoint) {
   });
 }
 
-export { app, cache };
+export { app, cache, landingPage };

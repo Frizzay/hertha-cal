@@ -49,7 +49,10 @@
 
       <label class="field-label" for="feed-url">Deine Kalender-Adresse</label>
       <div class="url-row">
-        <input id="feed-url" type="text" readonly value="/hertha.ics" spellcheck="false"
+        <!-- Der Server setzt hier PUBLIC_BASE_URL ein. Ist die Variable nicht
+             gesetzt, bleibt der relative Pfad stehen und app.js ergänzt die
+             Herkunft der Seite. -->
+        <input id="feed-url" type="text" readonly value="{{FEED_URL}}" spellcheck="false"
                aria-describedby="copy-status">
         <button class="btn btn-secondary" type="button" id="copy-btn">Kopieren</button>
       </div>
