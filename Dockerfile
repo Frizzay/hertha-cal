@@ -11,6 +11,19 @@ ENV NODE_ENV=production \
     PORT=3000
 WORKDIR /app
 
+# Pull security patches for the base image's OS packages. Costs reproducibility
+# between builds of the same Dockerfile, which is the right trade for an image
+# that is gated on having no HIGH or CRITICAL findings.
+RUN apk --no-cache upgrade
+
+# The app is started with plain `node`, so npm is dead weight at runtime. The
+# copy bundled in the base image carries its own dependency tree and is a
+# recurring source of CVE findings that this project cannot patch. Dropping it
+# removes that whole class of finding and shrinks the image.
+RUN rm -rf /usr/local/lib/node_modules/npm \
+           /usr/local/bin/npm \
+           /usr/local/bin/npx
+
 # Run unprivileged; the node image already ships a "node" user.
 COPY --from=deps --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node package.json ./

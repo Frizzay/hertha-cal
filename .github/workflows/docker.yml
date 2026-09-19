@@ -120,24 +120,30 @@ jobs:
           format: table
           output: trivy-report.txt
 
-      - name: Add scan result to the run summary
+      - name: Show scan result
         # Runs on success and on failure - the report matters most when the
         # gate has just blocked a push.
         if: always()
         run: |
+          if [ ! -f trivy-report.txt ]; then
+            # Never report a clean bill of health for a scan that never ran.
+            msg="No report was produced - the scan step itself failed. See its log."
+          elif [ -s trivy-report.txt ]; then
+            msg="$(cat trivy-report.txt)"
+          else
+            msg="No HIGH or CRITICAL vulnerabilities found."
+          fi
+
+          # To the step log, so a failing gate explains itself where people
+          # look first, and not only in the run summary.
+          printf '%s\n' "$msg"
+
           {
             echo "### Trivy scan (HIGH and CRITICAL)"
             echo
             echo '```'
-            if [ ! -f trivy-report.txt ]; then
-              # Never report a clean bill of health for a scan that never ran.
-              echo "No report was produced - the scan step itself failed. See its log."
-            elif [ -s trivy-report.txt ]; then
-              # The step summary caps out at 1 MB.
-              head -c 200000 trivy-report.txt
-            else
-              echo "No HIGH or CRITICAL vulnerabilities found."
-            fi
+            # The step summary caps out at 1 MB.
+            printf '%s\n' "$msg" | head -c 200000
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
