@@ -37,6 +37,31 @@ function logicalLines(ics) {
   return ics.replace(/\r\n[ \t]/g, '').split('\r\n');
 }
 
+/**
+ * Splits the first VEVENT into its own properties and those of its VALARMs.
+ *
+ * DESCRIPTION exists at three levels — calendar, event and alarm — so a plain
+ * search across the whole document silently picks the calendar header instead
+ * of the event.
+ */
+function firstEvent(ics) {
+  const lines = logicalLines(ics);
+  const start = lines.indexOf('BEGIN:VEVENT');
+  if (start === -1) return { event: [], alarms: [] };
+
+  const event = [];
+  const alarms = [];
+  let inAlarm = false;
+  for (const line of lines.slice(start + 1, lines.indexOf('END:VEVENT', start))) {
+    if (line === 'BEGIN:VALARM') inAlarm = true;
+    else if (line === 'END:VALARM') inAlarm = false;
+    else (inAlarm ? alarms : event).push(line);
+  }
+  return { event, alarms };
+}
+
+const descriptionOf = (lines) => lines.find((l) => l.startsWith('DESCRIPTION:'));
+
 describe('escapeText', () => {
   test('escapes the characters RFC 5545 requires', () => {
     assert.equal(escapeText('a;b,c\\d'), 'a\\;b\\,c\\\\d');
@@ -202,27 +227,28 @@ describe('buildCalendar', () => {
 
   test('reports the result in the description instead', () => {
     const match = makeMatch({ finished: true, score: { home: 0, away: 1, kind: 'After90Minutes' } });
-    const description = logicalLines(buildCalendar([match], options)).find((l) =>
-      l.startsWith('DESCRIPTION:'),
-    );
+    const description = descriptionOf(firstEvent(buildCalendar([match], options)).event);
     assert.ok(description.includes('Endstand: 0:1'), description);
   });
 
   test('marks results decided after extra time or penalties', () => {
     const shootout = makeMatch({ finished: true, score: { home: 3, away: 4, kind: 'AfterPenalties' } });
-    const description = logicalLines(buildCalendar([shootout], options)).find((l) =>
-      l.startsWith('DESCRIPTION:'),
-    );
+    const description = descriptionOf(firstEvent(buildCalendar([shootout], options)).event);
     assert.ok(description.includes('Endstand: 3:4 n.E.'), description);
+  });
+
+  test('says nothing about a result for a match not yet played', () => {
+    const description = descriptionOf(firstEvent(buildCalendar([makeMatch()], options)).event);
+    assert.ok(!description.includes('Endstand'), description);
   });
 
   test('does not leak the score into the reminder text', () => {
     const match = makeMatch({ finished: true, score: { home: 2, away: 1, kind: 'After90Minutes' } });
-    const alarmLines = logicalLines(buildCalendar([match], options)).filter(
-      (l) => l.startsWith('DESCRIPTION:') && l.includes('Anstoß in'),
+    const alarms = firstEvent(buildCalendar([match], options)).alarms.filter((l) =>
+      l.startsWith('DESCRIPTION:'),
     );
-    assert.equal(alarmLines.length, 2);
-    for (const line of alarmLines) assert.ok(!line.includes('2:1'), line);
+    assert.equal(alarms.length, 2);
+    for (const line of alarms) assert.ok(!line.includes('2:1'), line);
   });
 
   test('gives every event a reminder 30 and 5 minutes before kickoff', () => {
