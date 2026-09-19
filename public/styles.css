@@ -42,7 +42,12 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Verhindert, dass iOS Safari im Querformat einzelne Textblöcke aufbläht. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -112,11 +117,14 @@ a:hover { color: var(--accent-hover); }
   .hero { background: linear-gradient(158deg, var(--blue-800) 0%, #050f1b 100%); }
 }
 
-/* Dezentes Pill-Badge statt losem Icon neben Text. */
+/* Dezentes Pill-Badge statt losem Icon neben Text.
+   Der Abstand zum Icon steht bewusst als margin am SVG und nicht als gap:
+   Flexbox-gap kennt iOS Safari erst ab 14.1, davor klebten Icon und Text
+   aneinander. Eine @supports-Abfrage hilft hier nicht, weil diese Browser
+   gap fuer Grid sehr wohl unterstuetzen. */
 .hero-brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
   margin: 0 0 clamp(1.75rem, 5vw, 2.75rem);
   padding: 0.4rem 0.9rem 0.4rem 0.7rem;
   border: 1px solid rgba(255, 255, 255, 0.28);
@@ -127,7 +135,7 @@ a:hover { color: var(--accent-hover); }
   letter-spacing: 0.015em;
   color: #fff;
 }
-.hero-brand svg { display: block; flex: none; opacity: 0.95; }
+.hero-brand svg { display: block; flex: none; opacity: 0.95; margin-right: 0.5rem; }
 
 .hero h1 {
   color: #fff;
