@@ -18,19 +18,23 @@ Privates Fan-Projekt, nicht mit Hertha BSC, der DFL oder dem DFB verbunden.
 Datenquelle ist [OpenLigaDB](https://www.openligadb.de/) – frei, ohne API-Key.
 Hertha BSC hat dort die `teamId` 54; gelesen werden die Ligen `bl2` und `dfb`.
 
-### Feed-Parameter
+### Was im Feed steckt
 
-| Parameter | Werte | Standard | Wirkung |
-|---|---|---|---|
-| `competition` | `all`, `liga`, `pokal` | `all` | Wettbewerb einschränken |
-| `alarm` | `0`–`1440` | `0` | Erinnerung in Minuten vor Anstoß (`VALARM`) |
-| `past` | `1`, `0` | `1` | bereits gespielte Partien mitliefern |
+Es gibt genau einen Feed ohne Parameter und ohne Einstellungen:
 
-Beispiel: `https://example.de/hertha.ics?competition=liga&alarm=60`
+- alle Pflichtspiele der Saison, gespielte Partien inklusive
+- Titel mit vorangestelltem Emoji: ⚽ für die 2. Bundesliga, 🏆 für den DFB-Pokal
+- zwei Erinnerungen je Termin – 30 und 5 Minuten vor Anpfiff
+- Endstand im Titel, sobald abgepfiffen ist (`n.V.` bzw. `n.E.` bei Verlängerung
+  oder Elfmeterschießen)
+
+Die Erinnerungen stecken als `VALARM` im Termin. Wer sie nicht möchte, schaltet
+die Benachrichtigungen für diesen Kalender in seiner App ab – das lässt sich in
+den meisten Kalender-Apps pro Kalender einstellen.
 
 ## Lokal starten
 
-Voraussetzung: Node.js ≥ 20.6.
+Voraussetzung: Node.js ≥ 22 (gebaut und getestet wird mit Node 24).
 
 ```bash
 npm install
@@ -144,8 +148,10 @@ Alle Werte sind optional; die Standards stehen in `.env.example`.
 | `PORT` | `3000` | Listen-Port |
 | `PUBLIC_BASE_URL` | – | öffentliche Basis-URL ohne Slash am Ende |
 | `CACHE_TTL_MINUTES` | `30` | Cache-Dauer der Spieldaten |
-| `DEFAULT_ALARM_MINUTES` | `0` | Standard-Erinnerung ohne `?alarm=` |
 | `TRUST_PROXY` | `0` | `X-Forwarded-*` auswerten |
+
+Emojis und Erinnerungszeiten stehen als `COMPETITIONS` bzw. `ALARM_MINUTES` in
+`src/config.js`.
 
 Ohne `PUBLIC_BASE_URL` werden die Links aus dem Request abgeleitet. Das genügt
 zum Entwickeln, hinter einem Proxy aber nicht.

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import express from 'express';
 
-import { COMPETITIONS, config } from './config.js';
+import { config } from './config.js';
 import { MatchCache } from './cache.js';
 import { fetchHerthaMatches } from './openligadb.js';
 import { buildCalendar } from './ics.js';
@@ -48,51 +48,20 @@ function uidDomain(site) {
   }
 }
 
-/** Parses and clamps the feed query parameters. Unknown values fall back to defaults. */
-export function parseFeedOptions(query = {}) {
-  const requested = String(query.competition ?? 'all').toLowerCase();
-  // hasOwn, not `in`: `in` would also accept inherited names such as "constructor".
-  const competition =
-    requested === 'all' || Object.hasOwn(COMPETITIONS, requested) ? requested : 'all';
-
-  const rawAlarm = Number.parseInt(query.alarm ?? '', 10);
-  const alarmMinutes = Number.isFinite(rawAlarm)
-    ? Math.min(Math.max(rawAlarm, 0), 1440)
-    : config.defaultAlarmMinutes;
-
-  // past=0 drops matches that have already been played.
-  const includePast = !['0', 'false', 'no'].includes(String(query.past ?? '1').toLowerCase());
-
-  return { competition, alarmMinutes, includePast };
-}
-
-export function selectMatches(matches, { competition, includePast }, now = new Date()) {
-  return matches.filter((match) => {
-    if (competition !== 'all' && match.competition !== competition) return false;
-    if (!includePast && Date.parse(match.kickoffUtc) < now.getTime()) return false;
-    return true;
-  });
-}
-
-function calendarName({ competition }) {
-  if (competition === 'liga') return 'Hertha BSC – 2. Bundesliga';
-  if (competition === 'pokal') return 'Hertha BSC – DFB-Pokal';
-  return 'Hertha BSC – Spielplan';
-}
+const CALENDAR_NAME = 'Hertha BSC – Spielplan';
 
 app.get(['/hertha.ics', '/calendar.ics', '/hertha-bsc.ics'], async (req, res) => {
   // Express 4 does not catch rejections from async handlers, so everything that
   // can throw stays inside this block — otherwise the request would just hang.
   try {
-    const options = parseFeedOptions(req.query);
     const snapshot = await cache.get();
     const site = baseUrl(req);
 
-    const body = buildCalendar(selectMatches(snapshot.matches, options), {
-      calendarName: calendarName(options),
+    // One feed, every competitive fixture of the season, played ones included.
+    const body = buildCalendar(snapshot.matches, {
+      calendarName: CALENDAR_NAME,
       uidDomain: uidDomain(site),
       siteUrl: site,
-      alarmMinutes: options.alarmMinutes,
     });
 
     const etag = `"${createHash('sha256').update(body).digest('base64url').slice(0, 27)}"`;
@@ -116,13 +85,12 @@ app.get(['/hertha.ics', '/calendar.ics', '/hertha-bsc.ics'], async (req, res) =>
 app.get('/api/matches', async (req, res) => {
   try {
     const snapshot = await cache.get();
-    const options = parseFeedOptions(req.query);
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.json({
       updatedAt: snapshot.fetchedAt,
       stale: Boolean(snapshot.stale),
       seasons: snapshot.seasons,
-      matches: selectMatches(snapshot.matches, options),
+      matches: snapshot.matches,
     });
   } catch (error) {
     console.error(`[api] ${error.message}`);

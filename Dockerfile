@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 # Reproducible install when a lockfile is committed, best effort otherwise.
 RUN if [ -f package-lock.json ]; then npm ci --omit=dev; \
     else npm install --omit=dev --no-audit --no-fund; fi
 
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 ENV NODE_ENV=production \
     PORT=3000
 WORKDIR /app

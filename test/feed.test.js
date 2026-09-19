@@ -1,17 +1,40 @@
 import assert from 'node:assert/strict';
 import test, { describe } from 'node:test';
 
-import { currentSeason, seasonsToFetch } from '../src/config.js';
+import { ALARM_MINUTES, COMPETITIONS, currentSeason, seasonsToFetch } from '../src/config.js';
 import { MatchCache } from '../src/cache.js';
-import { parseFeedOptions, selectMatches } from '../src/server.js';
+// Importing the server must not start a listener. If the entrypoint guard in
+// server.js ever regresses, this test file stops exiting and the run hangs.
+import { app } from '../src/server.js';
 
-const match = (id, competition, kickoffUtc) => ({ id, competition, kickoffUtc });
+describe('server module', () => {
+  test('exposes an express app without listening', () => {
+    assert.equal(typeof app, 'function');
+    assert.equal(typeof app.listen, 'function');
+  });
+});
 
-const FIXTURES = [
-  match(1, 'liga', '2026-08-07T18:30:00Z'),
-  match(2, 'pokal', '2026-08-22T13:30:00Z'),
-  match(3, 'liga', '2026-12-05T13:30:00Z'),
-];
+describe('competitions', () => {
+  test('covers league and cup', () => {
+    assert.deepEqual(Object.keys(COMPETITIONS).sort(), ['liga', 'pokal']);
+  });
+
+  test('assigns each competition its own emoji', () => {
+    assert.equal(COMPETITIONS.liga.emoji, '⚽');
+    assert.equal(COMPETITIONS.pokal.emoji, '🏆');
+  });
+
+  test('reads the expected OpenLigaDB leagues', () => {
+    assert.equal(COMPETITIONS.liga.shortcut, 'bl2');
+    assert.equal(COMPETITIONS.pokal.shortcut, 'dfb');
+  });
+});
+
+describe('alarms', () => {
+  test('are two reminders, 30 and 5 minutes before kickoff', () => {
+    assert.deepEqual(ALARM_MINUTES, [30, 5]);
+  });
+});
 
 describe('season detection', () => {
   test('treats July onwards as the new season', () => {
@@ -32,71 +55,6 @@ describe('season detection', () => {
   test('sticks to a single season during the running year', () => {
     assert.deepEqual(seasonsToFetch(new Date('2026-09-19T00:00:00Z')), [2026]);
     assert.deepEqual(seasonsToFetch(new Date('2027-02-01T00:00:00Z')), [2026]);
-  });
-});
-
-describe('parseFeedOptions', () => {
-  test('defaults to everything, no alarm, history included', () => {
-    assert.deepEqual(parseFeedOptions({}), {
-      competition: 'all',
-      alarmMinutes: 0,
-      includePast: true,
-    });
-  });
-
-  test('accepts the known competitions', () => {
-    assert.equal(parseFeedOptions({ competition: 'liga' }).competition, 'liga');
-    assert.equal(parseFeedOptions({ competition: 'POKAL' }).competition, 'pokal');
-  });
-
-  test('falls back to all for an unknown competition', () => {
-    assert.equal(parseFeedOptions({ competition: 'champions-league' }).competition, 'all');
-  });
-
-  test('clamps the alarm into a sane range', () => {
-    assert.equal(parseFeedOptions({ alarm: '60' }).alarmMinutes, 60);
-    assert.equal(parseFeedOptions({ alarm: '-30' }).alarmMinutes, 0);
-    assert.equal(parseFeedOptions({ alarm: '99999' }).alarmMinutes, 1440);
-    assert.equal(parseFeedOptions({ alarm: 'bald' }).alarmMinutes, 0);
-  });
-
-  test('understands the ways of saying no to past matches', () => {
-    for (const value of ['0', 'false', 'no']) {
-      assert.equal(parseFeedOptions({ past: value }).includePast, false, value);
-    }
-    assert.equal(parseFeedOptions({ past: '1' }).includePast, true);
-  });
-
-  test('ignores array-shaped query values instead of crashing', () => {
-    // Express turns ?competition=a&competition=b into an array.
-    assert.equal(parseFeedOptions({ competition: ['liga', 'pokal'] }).competition, 'all');
-  });
-});
-
-describe('selectMatches', () => {
-  const now = new Date('2026-09-19T12:00:00Z');
-
-  test('returns everything by default', () => {
-    const result = selectMatches(FIXTURES, parseFeedOptions({}), now);
-    assert.equal(result.length, 3);
-  });
-
-  test('filters by competition', () => {
-    const liga = selectMatches(FIXTURES, parseFeedOptions({ competition: 'liga' }), now);
-    assert.deepEqual(liga.map((m) => m.id), [1, 3]);
-
-    const pokal = selectMatches(FIXTURES, parseFeedOptions({ competition: 'pokal' }), now);
-    assert.deepEqual(pokal.map((m) => m.id), [2]);
-  });
-
-  test('drops played matches when asked to', () => {
-    const upcoming = selectMatches(FIXTURES, parseFeedOptions({ past: '0' }), now);
-    assert.deepEqual(upcoming.map((m) => m.id), [3]);
-  });
-
-  test('combines both filters', () => {
-    const options = parseFeedOptions({ competition: 'pokal', past: '0' });
-    assert.deepEqual(selectMatches(FIXTURES, options, now), []);
   });
 });
 

@@ -47,6 +47,7 @@ function normalise(match, competitionKey) {
     id: match.matchID,
     competition: competitionKey,
     competitionLabel: COMPETITIONS[competitionKey].label,
+    emoji: COMPETITIONS[competitionKey].emoji,
     season: match.leagueSeason ?? null,
     round: match.group?.groupName ?? null,
     kickoffUtc: match.matchDateTimeUTC,

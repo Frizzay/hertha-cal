@@ -1,5 +1,7 @@
 // Minimal, dependency-free iCalendar (RFC 5545) writer tailored to this feed.
 
+import { ALARM_MINUTES } from './config.js';
+
 const CRLF = '\r\n';
 const MATCH_DURATION_MINUTES = 120;
 const HOME_VENUE = { name: 'Olympiastadion Berlin', geo: '52.514722;13.239444' };
@@ -104,12 +106,14 @@ function scoreSuffix(kind) {
   return '';
 }
 
+/** Event title, prefixed with the competition emoji. */
 function matchTitle(match) {
+  const prefix = match.emoji ? `${match.emoji} ` : '';
   const pairing = `${match.homeTeam} – ${match.awayTeam}`;
   if (match.finished && match.score) {
-    return `${pairing} ${match.score.home}:${match.score.away}${scoreSuffix(match.score.kind)}`;
+    return `${prefix}${pairing} ${match.score.home}:${match.score.away}${scoreSuffix(match.score.kind)}`;
   }
-  return pairing;
+  return `${prefix}${pairing}`;
 }
 
 function matchVenue(match) {
@@ -139,7 +143,7 @@ function sequenceFor(match) {
 }
 
 function buildEvent(match, options) {
-  const { uidDomain, siteUrl, alarmMinutes } = options;
+  const { uidDomain, siteUrl } = options;
   const start = new Date(match.kickoffUtc);
   const end = new Date(start.getTime() + MATCH_DURATION_MINUTES * 60_000);
   // Derived from the data, never from the wall clock, so identical data always
@@ -165,12 +169,12 @@ function buildEvent(match, options) {
   if (venue) lines.push(`LOCATION:${escapeText(venue)}`);
   if (!match.stadium && match.isHome) lines.push(`GEO:${HOME_VENUE.geo}`);
 
-  if (alarmMinutes > 0 && !match.finished) {
+  for (const minutes of ALARM_MINUTES) {
     lines.push(
       'BEGIN:VALARM',
       'ACTION:DISPLAY',
-      `TRIGGER:-PT${alarmMinutes}M`,
-      `DESCRIPTION:${escapeText(`${matchTitle(match)} — Anstoß in ${alarmMinutes} Minuten`)}`,
+      `TRIGGER:-PT${minutes}M`,
+      `DESCRIPTION:${escapeText(`${matchTitle(match)} — Anstoß in ${minutes} Minuten`)}`,
       'END:VALARM',
     );
   }
@@ -181,12 +185,11 @@ function buildEvent(match, options) {
 
 /**
  * Renders the full VCALENDAR document.
- * @param {object[]} matches normalised matches, already filtered and sorted
- * @param {object} options  { calendarName, uidDomain, siteUrl, alarmMinutes }
+ * @param {object[]} matches normalised matches, sorted by kickoff
+ * @param {object} options  { calendarName, uidDomain, siteUrl }
  */
 export function buildCalendar(matches, options) {
-  const { calendarName, alarmMinutes = 0 } = options;
-  const opts = { ...options, alarmMinutes: Number.isFinite(alarmMinutes) ? alarmMinutes : 0 };
+  const { calendarName } = options;
 
   const lines = [
     'BEGIN:VCALENDAR',
@@ -205,7 +208,7 @@ export function buildCalendar(matches, options) {
     'X-PUBLISHED-TTL:PT12H',
   ];
 
-  for (const match of matches) lines.push(...buildEvent(match, opts));
+  for (const match of matches) lines.push(...buildEvent(match, options));
   lines.push('END:VCALENDAR');
 
   return lines.map(foldLine).join(CRLF) + CRLF;

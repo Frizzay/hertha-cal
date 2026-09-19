@@ -7,18 +7,22 @@ export const config = {
   port: int(process.env.PORT, 3000),
   publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
   cacheTtlMs: int(process.env.CACHE_TTL_MINUTES, 30) * 60_000,
-  defaultAlarmMinutes: int(process.env.DEFAULT_ALARM_MINUTES, 0),
   trustProxy: process.env.TRUST_PROXY === '1',
 };
 
 // Hertha BSC as identified by OpenLigaDB.
 export const HERTHA_TEAM_ID = 54;
 
-// Competitions the feed can cover. `shortcut` is the OpenLigaDB league key.
+// Competitions the feed covers. `shortcut` is the OpenLigaDB league key, and
+// `emoji` prefixes the event title so the competition is obvious at a glance in
+// a month view.
 export const COMPETITIONS = {
-  liga: { shortcut: 'bl2', label: '2. Bundesliga' },
-  pokal: { shortcut: 'dfb', label: 'DFB-Pokal' },
+  liga: { shortcut: 'bl2', label: '2. Bundesliga', emoji: '⚽' },
+  pokal: { shortcut: 'dfb', label: 'DFB-Pokal', emoji: '🏆' },
 };
+
+// Every event carries these reminders, in minutes before kickoff.
+export const ALARM_MINUTES = [30, 5];
 
 // A football season labelled 2026 runs from summer 2026 into spring 2027.
 // From July onwards the new season is the current one.

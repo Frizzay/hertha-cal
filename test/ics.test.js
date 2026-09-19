@@ -7,7 +7,6 @@ const options = {
   calendarName: 'Hertha BSC – Spielplan',
   uidDomain: 'hertha-kalender.example.de',
   siteUrl: 'https://hertha-kalender.example.de',
-  alarmMinutes: 0,
 };
 
 function makeMatch(overrides = {}) {
@@ -15,6 +14,7 @@ function makeMatch(overrides = {}) {
     id: 83509,
     competition: 'liga',
     competitionLabel: '2. Bundesliga',
+    emoji: '⚽',
     season: 2026,
     round: '1. Spieltag',
     kickoffUtc: '2026-08-07T18:30:00Z',
@@ -76,6 +76,14 @@ describe('foldLine', () => {
     const line = `${'a'.repeat(74)}üöä ${'b'.repeat(40)}`;
     const folded = foldLine(line);
     assert.equal(folded.split('\r\n').map((p, i) => (i ? p.slice(1) : p)).join(''), line);
+    assert.ok(!folded.includes('�'), 'no replacement characters');
+  });
+
+  test('never splits a four-octet emoji across a fold', () => {
+    // 🏆 is four octets; the padding lands it exactly on the 75-octet boundary.
+    const line = `${'a'.repeat(73)}🏆${'b'.repeat(40)}`;
+    const folded = foldLine(line);
+    assert.equal(folded.replace(/\r\n /g, ''), line);
     assert.ok(!folded.includes('�'), 'no replacement characters');
   });
 
@@ -159,10 +167,30 @@ describe('buildCalendar', () => {
     assert.ok(logicalLines(buildCalendar([makeMatch()], options)).includes('TRANSP:TRANSPARENT'));
   });
 
+  test('prefixes league matches with the football emoji', () => {
+    const summary = logicalLines(buildCalendar([makeMatch()], options)).find((l) =>
+      l.startsWith('SUMMARY:'),
+    );
+    assert.equal(summary, 'SUMMARY:⚽ VfL Bochum – Hertha BSC');
+  });
+
+  test('prefixes cup matches with the trophy emoji', () => {
+    const cup = makeMatch({ competition: 'pokal', competitionLabel: 'DFB-Pokal', emoji: '🏆' });
+    const summary = logicalLines(buildCalendar([cup], options)).find((l) => l.startsWith('SUMMARY:'));
+    assert.equal(summary, 'SUMMARY:🏆 VfL Bochum – Hertha BSC');
+  });
+
+  test('omits the prefix when a match carries no emoji', () => {
+    const summary = logicalLines(buildCalendar([makeMatch({ emoji: undefined })], options)).find(
+      (l) => l.startsWith('SUMMARY:'),
+    );
+    assert.equal(summary, 'SUMMARY:VfL Bochum – Hertha BSC');
+  });
+
   test('appends the final score once a match is finished', () => {
     const match = makeMatch({ finished: true, score: { home: 0, away: 1, kind: 'After90Minutes' } });
     const summary = logicalLines(buildCalendar([match], options)).find((l) => l.startsWith('SUMMARY:'));
-    assert.equal(summary, 'SUMMARY:VfL Bochum – Hertha BSC 0:1');
+    assert.equal(summary, 'SUMMARY:⚽ VfL Bochum – Hertha BSC 0:1');
   });
 
   test('marks results decided after extra time or penalties', () => {
@@ -171,19 +199,23 @@ describe('buildCalendar', () => {
     assert.ok(summary.endsWith('3:4 n.E.'));
   });
 
-  test('adds a VALARM only when a reminder was requested', () => {
-    const without = buildCalendar([makeMatch()], options);
-    assert.ok(!without.includes('BEGIN:VALARM'));
-
-    const withAlarm = buildCalendar([makeMatch()], { ...options, alarmMinutes: 60 });
-    assert.ok(withAlarm.includes('BEGIN:VALARM'));
-    assert.ok(logicalLines(withAlarm).includes('TRIGGER:-PT60M'));
+  test('gives every event a reminder 30 and 5 minutes before kickoff', () => {
+    const lines = logicalLines(buildCalendar([makeMatch()], options));
+    assert.equal(lines.filter((l) => l === 'BEGIN:VALARM').length, 2);
+    assert.equal(lines.filter((l) => l === 'END:VALARM').length, 2);
+    assert.ok(lines.includes('TRIGGER:-PT30M'));
+    assert.ok(lines.includes('TRIGGER:-PT5M'));
   });
 
-  test('does not remind about matches that have already been played', () => {
+  test('reminds about played matches too, so the rule has no exceptions', () => {
     const played = makeMatch({ finished: true, score: { home: 1, away: 1, kind: 'After90Minutes' } });
-    const ics = buildCalendar([played], { ...options, alarmMinutes: 60 });
-    assert.ok(!ics.includes('BEGIN:VALARM'));
+    const lines = logicalLines(buildCalendar([played], options));
+    assert.equal(lines.filter((l) => l === 'BEGIN:VALARM').length, 2);
+  });
+
+  test('nests both alarms inside the event', () => {
+    const lines = logicalLines(buildCalendar([makeMatch()], options));
+    assert.ok(lines.lastIndexOf('END:VALARM') < lines.indexOf('END:VEVENT'));
   });
 
   test('falls back to the Olympiastadion for home matches without venue data', () => {

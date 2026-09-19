@@ -2,49 +2,24 @@
 (function () {
   'use strict';
 
-  var form = document.getElementById('options');
+  var FEED_PATH = '/hertha.ics';
+  var MAX_VISIBLE = 12;
+
   var urlField = document.getElementById('feed-url');
   var copyBtn = document.getElementById('copy-btn');
   var copyStatus = document.getElementById('copy-status');
   var subscribeBtn = document.getElementById('subscribe-btn');
   var googleBtn = document.getElementById('google-btn');
-  var downloadBtn = document.getElementById('download-btn');
   var list = document.getElementById('match-list');
   var status = document.getElementById('match-status');
 
-  var MAX_VISIBLE = 12;
-
-  function currentOptions() {
-    var data = new FormData(form);
-    return {
-      competition: data.get('competition') || 'all',
-      alarm: data.get('alarm') || '0',
-      past: data.get('past') || '1',
-    };
-  }
-
-  /** Only non-default options end up in the URL, so the common case stays short. */
-  function feedPath(options) {
-    var params = new URLSearchParams();
-    if (options.competition !== 'all') params.set('competition', options.competition);
-    if (options.alarm !== '0') params.set('alarm', options.alarm);
-    if (options.past !== '1') params.set('past', options.past);
-    var query = params.toString();
-    return '/hertha.ics' + (query ? '?' + query : '');
-  }
+  // ---------- Abo-Adressen ----------
 
   function render() {
-    var options = currentOptions();
-    var path = feedPath(options);
-    var httpsUrl = window.location.origin + path;
-
+    var httpsUrl = window.location.origin + FEED_PATH;
     urlField.value = httpsUrl;
     subscribeBtn.href = httpsUrl.replace(/^https?:/, 'webcal:');
-    googleBtn.href =
-      'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(httpsUrl);
-    downloadBtn.href = path;
-
-    return options;
+    googleBtn.href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(httpsUrl);
   }
 
   // ---------- Kopieren ----------
@@ -57,7 +32,6 @@
   }
 
   copyBtn.addEventListener('click', function () {
-    var value = urlField.value;
     var done = function () {
       flash('Adresse kopiert. Jetzt in deiner Kalender-App als Abo einfügen.');
     };
@@ -68,15 +42,10 @@
 
     // navigator.clipboard braucht einen sicheren Kontext (https oder localhost).
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(value).then(done, failed);
+      navigator.clipboard.writeText(urlField.value).then(done, failed);
     } else {
       failed();
     }
-  });
-
-  form.addEventListener('change', function () {
-    render();
-    loadMatches();
   });
 
   // ---------- Spielliste ----------
@@ -106,12 +75,19 @@
 
   function teamsNode(match) {
     var node = el('div', 'match-teams');
-    var home = el('span', match.isHome ? 'me' : null, match.homeTeam);
-    var away = el('span', match.isHome ? null : 'me', match.awayTeam);
-    node.appendChild(home);
+    if (match.emoji) {
+      var icon = el('span', 'match-emoji', match.emoji);
+      icon.setAttribute('aria-hidden', 'true');
+      node.appendChild(icon);
+      node.appendChild(document.createTextNode(' '));
+    }
+    node.appendChild(el('span', match.isHome ? 'me' : null, match.homeTeam));
     node.appendChild(document.createTextNode(' – '));
-    node.appendChild(away);
-    if (match.competition === 'pokal') node.appendChild(el('span', 'badge', 'Pokal'));
+    node.appendChild(el('span', match.isHome ? null : 'me', match.awayTeam));
+    if (match.competitionLabel) {
+      // Trägt die Information, die das Emoji nur visuell vermittelt.
+      node.appendChild(el('span', 'visually-hidden', ' (' + match.competitionLabel + ')'));
+    }
     return node;
   }
 
@@ -124,36 +100,26 @@
 
   function matchNode(match) {
     var item = el('li', 'match');
-    var when = new Date(match.kickoffUtc);
-    var date = el('div', 'match-date', dateFormat.format(when) + ' Uhr');
-    date.appendChild(document.createElement('br'));
-    item.appendChild(date);
+    item.appendChild(el('div', 'match-date', dateFormat.format(new Date(match.kickoffUtc)) + ' Uhr'));
     item.appendChild(teamsNode(match));
     item.appendChild(metaNode(match));
     return item;
   }
 
-  var pending = 0;
-
   function loadMatches() {
-    var options = currentOptions();
-    var params = new URLSearchParams({ competition: options.competition, past: options.past });
-    var token = ++pending;
-
     list.setAttribute('aria-busy', 'true');
 
-    fetch('/api/matches?' + params.toString(), { headers: { accept: 'application/json' } })
+    fetch('/api/matches', { headers: { accept: 'application/json' } })
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
       })
       .then(function (data) {
-        if (token !== pending) return; // eine neuere Anfrage ist bereits unterwegs
         list.textContent = '';
 
         var matches = Array.isArray(data.matches) ? data.matches : [];
         if (!matches.length) {
-          status.textContent = 'Für diese Auswahl liegen derzeit keine Spiele vor.';
+          status.textContent = 'Derzeit liegen keine Spiele vor.';
           return;
         }
 
@@ -168,13 +134,12 @@
         status.textContent = note + (data.stale ? ' (Datenquelle gerade nicht erreichbar).' : '.');
       })
       .catch(function () {
-        if (token !== pending) return;
         list.textContent = '';
         status.textContent =
           'Die Spiele konnten nicht geladen werden. Das Kalender-Abo funktioniert davon unabhängig weiter.';
       })
       .finally(function () {
-        if (token === pending) list.setAttribute('aria-busy', 'false');
+        list.setAttribute('aria-busy', 'false');
       });
   }
 

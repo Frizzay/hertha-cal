@@ -72,32 +72,12 @@
         automatisch. Eine heruntergeladene Datei bleibt auf dem Stand von heute.
       </p>
 
-      <form class="options" id="options">
-        <fieldset>
-          <legend>Wettbewerbe</legend>
-          <label class="choice"><input type="radio" name="competition" value="all" checked> Alle Pflichtspiele</label>
-          <label class="choice"><input type="radio" name="competition" value="liga"> Nur 2. Bundesliga</label>
-          <label class="choice"><input type="radio" name="competition" value="pokal"> Nur DFB-Pokal</label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Erinnerung vor Anpfiff</legend>
-          <label class="visually-hidden" for="alarm">Erinnerung vor Anpfiff</label>
-          <select id="alarm" name="alarm">
-            <option value="0" selected>Keine Erinnerung</option>
-            <option value="30">30 Minuten vorher</option>
-            <option value="60">1 Stunde vorher</option>
-            <option value="120">2 Stunden vorher</option>
-            <option value="1440">1 Tag vorher</option>
-          </select>
-        </fieldset>
-
-        <fieldset>
-          <legend>Vergangene Spiele</legend>
-          <label class="choice"><input type="radio" name="past" value="1" checked> Mit Ergebnissen anzeigen</label>
-          <label class="choice"><input type="radio" name="past" value="0"> Nur kommende Spiele</label>
-        </fieldset>
-      </form>
+      <ul class="included">
+        <li><span aria-hidden="true">⚽</span> Alle Spiele der 2. Bundesliga</li>
+        <li><span aria-hidden="true">🏆</span> Alle Partien im DFB-Pokal</li>
+        <li><span aria-hidden="true">⏰</span> Zwei Erinnerungen pro Spiel: 30 und 5 Minuten vor Anpfiff</li>
+        <li><span aria-hidden="true">📊</span> Endergebnisse direkt im Termin, sobald abgepfiffen ist</li>
+      </ul>
     </section>
 
     <section id="anleitung" aria-labelledby="anleitung-title">
@@ -109,7 +89,7 @@
       <ol class="steps">
         <li>
           <h3>Adresse kopieren</h3>
-          <p>Optionen oben wählen und auf „Kopieren“ tippen.</p>
+          <p>Oben auf „Kopieren“ tippen – mehr ist nicht einzustellen.</p>
         </li>
         <li>
           <h3>Kalender-App öffnen</h3>
@@ -164,8 +144,25 @@
           <summary>Werden Ergebnisse angezeigt?</summary>
           <p>
             Ja. Nach Abpfiff ergänzt der Kalender den Endstand im Titel des Termins –
-            etwa „Hertha BSC – Hamburger SV 2:1“. Wer das nicht möchte, wählt oben
-            „Nur kommende Spiele“.
+            etwa „⚽ Hertha BSC – Hamburger SV 2:1“. Entscheidungen nach Verlängerung
+            oder Elfmeterschießen werden mit „n.V.“ bzw. „n.E.“ gekennzeichnet.
+          </p>
+        </details>
+        <details>
+          <summary>Welche Erinnerungen bekomme ich?</summary>
+          <p>
+            Jedes Spiel bringt zwei Erinnerungen mit: 30 Minuten und 5 Minuten vor
+            Anpfiff. Wer das nicht möchte, schaltet die Benachrichtigungen für diesen
+            Kalender in seiner App ab – in den meisten Kalender-Apps lässt sich das
+            pro Kalender einstellen.
+          </p>
+        </details>
+        <details>
+          <summary>Was bedeuten die Symbole im Titel?</summary>
+          <p>
+            ⚽ steht für ein Spiel in der 2. Bundesliga, 🏆 für eine Partie im
+            DFB-Pokal. So ist der Wettbewerb schon in der Monatsansicht erkennbar,
+            ohne den Termin zu öffnen.
           </p>
         </details>
         <details>
