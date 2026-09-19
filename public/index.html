@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hertha BSC Spielplan als Kalender-Abo</title>
+<meta name="description" content="Alle Pflichtspiele von Hertha BSC automatisch im eigenen Kalender – einmal abonnieren, Termine und Anstoßzeiten aktualisieren sich von selbst.">
+<meta name="theme-color" content="#004c9e">
+<meta property="og:title" content="Hertha BSC Spielplan als Kalender-Abo">
+<meta property="og:description" content="Alle Pflichtspiele von Hertha BSC automatisch im eigenen Kalender.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23004c9e'/%3E%3Crect x='7' y='9' width='18' height='16' rx='2.5' fill='%23fff'/%3E%3Crect x='7' y='9' width='18' height='4.5' fill='%23e3eefb'/%3E%3Crect x='10.5' y='5.5' width='2.5' height='6' rx='1.25' fill='%23fff'/%3E%3Crect x='19' y='5.5' width='2.5' height='6' rx='1.25' fill='%23fff'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<a class="skip" href="#main">Zum Inhalt springen</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#ffffff"/>
+        <rect x="7" y="9" width="18" height="16" rx="2.5" fill="#004c9e"/>
+        <rect x="7" y="9" width="18" height="4.5" fill="#0a72d6"/>
+        <rect x="10.5" y="5.5" width="2.5" height="6" rx="1.25" fill="#004c9e"/>
+        <rect x="19" y="5.5" width="2.5" height="6" rx="1.25" fill="#004c9e"/>
+      </svg>
+      <span>Hertha Kalender</span>
+    </a>
+    <a class="header-link" href="#spiele">Nächste Spiele</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="wrap">
+    <section class="hero">
+      <div class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <p class="eyebrow">Kalender-Abo · immer aktuell</p>
+      <h1>Alle Hertha-Spiele<br>in deinem Kalender.</h1>
+      <p class="lead">
+        Einmal abonnieren – 2. Bundesliga und DFB-Pokal landen automatisch in deinem
+        Kalender. Verlegte Partien und kurzfristige Anstoßzeiten aktualisieren sich
+        von selbst. Kein Konto, keine App, keine Cookies.
+      </p>
+    </section>
+
+    <section class="card subscribe" id="abonnieren" aria-labelledby="abo-title">
+      <h2 id="abo-title" class="visually-hidden">Kalender abonnieren</h2>
+
+      <label class="field-label" for="feed-url">Deine Kalender-Adresse</label>
+      <div class="url-row">
+        <input id="feed-url" type="text" readonly value="/hertha.ics" spellcheck="false"
+               aria-describedby="copy-status">
+        <button class="btn btn-secondary" type="button" id="copy-btn">Kopieren</button>
+      </div>
+      <p class="hint" id="copy-status" role="status" aria-live="polite"></p>
+
+      <div class="actions">
+        <a class="btn btn-primary" id="subscribe-btn" href="#">Jetzt abonnieren</a>
+        <a class="btn btn-secondary" id="google-btn" href="#" target="_blank" rel="noopener noreferrer">
+          Google Kalender
+        </a>
+        <a class="btn btn-secondary" id="download-btn" href="/hertha.ics" download="hertha-bsc.ics">
+          .ics herunterladen
+        </a>
+      </div>
+
+      <p class="hint">
+        <strong>Abonnieren statt herunterladen:</strong> nur ein Abo aktualisiert sich
+        automatisch. Eine heruntergeladene Datei bleibt auf dem Stand von heute.
+      </p>
+
+      <form class="options" id="options">
+        <fieldset>
+          <legend>Wettbewerbe</legend>
+          <label class="choice"><input type="radio" name="competition" value="all" checked> Alle Pflichtspiele</label>
+          <label class="choice"><input type="radio" name="competition" value="liga"> Nur 2. Bundesliga</label>
+          <label class="choice"><input type="radio" name="competition" value="pokal"> Nur DFB-Pokal</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Erinnerung vor Anpfiff</legend>
+          <label class="visually-hidden" for="alarm">Erinnerung vor Anpfiff</label>
+          <select id="alarm" name="alarm">
+            <option value="0" selected>Keine Erinnerung</option>
+            <option value="30">30 Minuten vorher</option>
+            <option value="60">1 Stunde vorher</option>
+            <option value="120">2 Stunden vorher</option>
+            <option value="1440">1 Tag vorher</option>
+          </select>
+        </fieldset>
+
+        <fieldset>
+          <legend>Vergangene Spiele</legend>
+          <label class="choice"><input type="radio" name="past" value="1" checked> Mit Ergebnissen anzeigen</label>
+          <label class="choice"><input type="radio" name="past" value="0"> Nur kommende Spiele</label>
+        </fieldset>
+      </form>
+    </section>
+
+    <section id="anleitung" aria-labelledby="anleitung-title">
+      <h2 id="anleitung-title">So richtest du es ein</h2>
+      <p class="section-intro">
+        Der Kalender funktioniert überall, wo Abos nach dem iCalendar-Standard
+        unterstützt werden – also in praktisch jeder Kalender-App.
+      </p>
+      <ol class="steps">
+        <li>
+          <h3>Adresse kopieren</h3>
+          <p>Optionen oben wählen und auf „Kopieren“ tippen.</p>
+        </li>
+        <li>
+          <h3>Kalender-App öffnen</h3>
+          <p><em>Apple:</em> Kalender → Ablage → Neues Kalenderabo.
+             <em>Google:</em> Andere Kalender → Per URL.
+             <em>Outlook:</em> Kalender hinzufügen → Aus dem Internet abonnieren.</p>
+        </li>
+        <li>
+          <h3>Einfügen und fertig</h3>
+          <p>Ab jetzt aktualisiert deine App den Spielplan selbstständig – meist ein- bis zweimal am Tag.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="spiele" aria-labelledby="spiele-title">
+      <h2 id="spiele-title">Nächste Spiele</h2>
+      <p class="section-intro">
+        Ein Auszug aus dem Kalender. Anstoßzeiten späterer Spieltage sind bis zur
+        offiziellen Ansetzung durch die DFL vorläufig.
+      </p>
+      <ul class="matches" id="match-list" aria-busy="true"></ul>
+      <p class="status" id="match-status">Spiele werden geladen …</p>
+    </section>
+
+    <section id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Häufige Fragen</h2>
+      <div class="faq">
+        <details>
+          <summary>Wie oft wird der Kalender aktualisiert?</summary>
+          <p>
+            Die Spieldaten werden mehrmals täglich von OpenLigaDB abgerufen. Wie schnell
+            Änderungen bei dir ankommen, entscheidet deine Kalender-App: Apple und Outlook
+            fragen meist stündlich bis täglich nach, Google teils nur alle 24 Stunden.
+          </p>
+        </details>
+        <details>
+          <summary>Warum steht bei manchen Spielen eine ungenaue Uhrzeit?</summary>
+          <p>
+            Die DFL setzt Spieltage erst einige Wochen im Voraus zeitgenau an. Bis dahin
+            trägt die Datenquelle den Standard-Anstoß des jeweiligen Spieltags ein. Sobald
+            die offizielle Ansetzung vorliegt, korrigiert sich der Termin automatisch.
+          </p>
+        </details>
+        <details>
+          <summary>Blockiert der Kalender meine Zeit als „beschäftigt“?</summary>
+          <p>
+            Nein. Alle Termine sind als „frei“ markiert, damit dein Frei/Belegt-Status für
+            Kollegen unberührt bleibt. In der Kalenderansicht siehst du die Spiele trotzdem.
+          </p>
+        </details>
+        <details>
+          <summary>Werden Ergebnisse angezeigt?</summary>
+          <p>
+            Ja. Nach Abpfiff ergänzt der Kalender den Endstand im Titel des Termins –
+            etwa „Hertha BSC – Hamburger SV 2:1“. Wer das nicht möchte, wählt oben
+            „Nur kommende Spiele“.
+          </p>
+        </details>
+        <details>
+          <summary>Woher kommen die Daten?</summary>
+          <p>
+            Von <a href="https://www.openligadb.de/" target="_blank" rel="noopener noreferrer">OpenLigaDB</a>,
+            einer freien Community-Datenbank für den deutschen Fußball. Dieses Angebot ist
+            nicht mit Hertha BSC, der DFL oder dem DFB verbunden. Für die Richtigkeit der
+            Termine wird keine Gewähr übernommen – maßgeblich ist immer die offizielle Ansetzung.
+          </p>
+        </details>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <nav class="footer-nav" aria-label="Rechtliches">
+      <a href="/impressum">Impressum</a>
+      <a href="/datenschutz">Datenschutz</a>
+      <a href="https://www.openligadb.de/" target="_blank" rel="noopener noreferrer">Datenquelle: OpenLigaDB</a>
+    </nav>
+    <p class="disclaimer">
+      Privates, nicht-kommerzielles Fan-Projekt. Nicht offiziell und in keiner Weise
+      verbunden mit Hertha BSC, der DFL Deutsche Fußball Liga oder dem DFB. Alle
+      Vereinsnamen und Marken gehören ihren jeweiligen Inhabern.
+    </p>
+    <p class="disclaimer">
+      Diese Seite setzt keine Cookies, bindet keine Ressourcen von Dritten ein und
+      verwendet kein Tracking.
+    </p>
+  </div>
+</footer>
+
+<script src="/app.js" defer></script>
+</body>
+</html>

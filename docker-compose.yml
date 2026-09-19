@@ -1,0 +1,21 @@
+services:
+  hertha-cal:
+    build: .
+    image: hertha-cal:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      # Must match the address the feed is reachable under, otherwise the
+      # subscription links on the page point somewhere else.
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      CACHE_TTL_MINUTES: ${CACHE_TTL_MINUTES:-30}
+      DEFAULT_ALARM_MINUTES: ${DEFAULT_ALARM_MINUTES:-0}
+      # Enable when a reverse proxy terminates TLS in front of this container.
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp

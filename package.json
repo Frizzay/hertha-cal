@@ -1,0 +1,20 @@
+{
+  "name": "hertha-cal",
+  "version": "1.0.0",
+  "description": "Kalender-Abo (iCalendar/ICS) mit allen Pflichtspielen von Hertha BSC",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,34 @@
+# Deployment auf dem Server: zieht das fertige Image aus der GitHub Container
+# Registry, statt lokal zu bauen.
+#
+#   export IMAGE_OWNER=dein-github-name      # kleingeschrieben
+#   export PUBLIC_BASE_URL=https://hertha-kalender.example.de
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Aktualisieren: dieselben zwei Befehle erneut ausführen.
+
+services:
+  hertha-cal:
+    image: ghcr.io/${IMAGE_OWNER:?IMAGE_OWNER setzen, z. B. export IMAGE_OWNER=dein-github-name}/hertha-cal:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      # Nur lokal gebunden - TLS gehört in den Reverse Proxy davor.
+      - "127.0.0.1:3000:3000"
+    environment:
+      PORT: 3000
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL auf die öffentliche https-Adresse setzen}
+      CACHE_TTL_MINUTES: ${CACHE_TTL_MINUTES:-30}
+      DEFAULT_ALARM_MINUTES: ${DEFAULT_ALARM_MINUTES:-0}
+      # Hinter einem Reverse Proxy nötig, damit X-Forwarded-Proto gilt.
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

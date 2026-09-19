@@ -1,0 +1,121 @@
+name: Build and publish image
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer push to the same ref makes the running build pointless.
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        # npm ci needs a lockfile. Commit package-lock.json to get reproducible
+        # installs here and in the Dockerfile; until then fall back to install.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            echo "::warning::No package-lock.json committed - installs are not reproducible."
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: Build and push
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Only needed to emulate linux/arm64 on the amd64 runner.
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Pull requests from forks get no package write access, so skip the login
+      # and build without pushing.
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # Lowercased automatically, which matters because GHCR rejects
+          # uppercase paths and GitHub usernames may contain capitals.
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=hertha-cal
+            org.opencontainers.image.description=Kalender-Abo mit allen Pflichtspielen von Hertha BSC
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Provenance attestations would add "unknown/unknown" entries to the
+          # package listing in the GitHub UI, which only causes confusion here.
+          provenance: false
+
+      - name: Summarise
+        if: github.event_name != 'pull_request'
+        # Values go through the environment rather than straight into the script,
+        # so a ref name can never be interpreted as shell.
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+          IMAGE_DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          {
+            echo "### Image published"
+            echo
+            echo '```'
+            printf '%s\n' "$IMAGE_TAGS"
+            echo '```'
+            echo
+            printf 'Digest: `%s`\n' "$IMAGE_DIGEST"
+          } >> "$GITHUB_STEP_SUMMARY"
