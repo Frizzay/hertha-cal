@@ -187,9 +187,47 @@ a:hover { color: var(--accent-hover); }
   z-index: 1;
 }
 
-/* ---------- App-Auswahl ---------- */
+/* ---------- Abo-Button und Auswahl-Dialog ---------- */
 
-.pick { font-weight: 650; font-size: 1.05rem; margin: 0 0 0.9rem; }
+.subscribe-cta {
+  display: block; width: 100%;
+  padding: 1rem 1.5rem;
+  font: inherit; font-size: 1.05rem; font-weight: 700;
+  color: var(--on-accent); background: var(--accent);
+  border: 1px solid transparent; border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.subscribe-cta:hover { background: var(--accent-hover); }
+
+/* Kennt der Browser <dialog> nicht, ist es ein unbekanntes Element ohne
+   Standard-display:none - der Dialog stünde dann dauerhaft offen in der Seite. */
+dialog:not([open]) { display: none; }
+
+.picker {
+  width: min(100% - 2rem, 34rem);
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.picker::backdrop { background: rgba(0, 20, 40, 0.6); }
+/* Fällt <dialog> aus, erscheint die Auswahl als Block in der Karte. */
+.picker[open]:not(:modal) { margin: 1rem 0 0; width: auto; }
+
+.picker-title { margin: 0 0 1rem; font-size: 1.15rem; }
+
+.picker-close {
+  display: block; width: 100%; margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  font: inherit; font-weight: 650;
+  color: var(--text-muted); background: transparent;
+  border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer;
+}
+.picker-close:hover { color: var(--text); background: var(--surface-alt); }
 
 .apps {
   display: grid;

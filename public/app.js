@@ -6,6 +6,9 @@
   var MAX_VISIBLE = 12;
 
   var card = document.getElementById('abonnieren');
+  var subscribeBtn = document.getElementById('subscribe-btn');
+  var picker = document.getElementById('picker');
+  var pickerClose = document.getElementById('picker-close');
   var appleBtn = document.getElementById('apple-btn');
   var googleBtn = document.getElementById('google-btn');
   var outlookBtn = document.getElementById('outlook-btn');
@@ -51,14 +54,47 @@
       'https://outlook.live.com/calendar/0/addfromweb?url=' +
       encodeURIComponent(webcalUrl) +
       '&name=' + encodeURIComponent('Hertha BSC');
-    outlookBtn.hidden = false;
 
     // Ohne Zwischenablage verspricht der Button nichts, was er nicht halten kann.
     if (!navigator.clipboard || !window.isSecureContext) {
       copyNote.textContent = 'Adresse anzeigen';
     }
-    copyBtn.hidden = false;
+
+    subscribeBtn.hidden = false;
   }
+
+  // ---------- Auswahl-Dialog ----------
+
+  var canUseModal = typeof picker.showModal === 'function';
+
+  function openPicker() {
+    copyStatus.textContent = '';
+    if (canUseModal) {
+      // showModal() bringt Fokusfalle, Escape und inerten Hintergrund mit -
+      // nichts davon muss hier nachgebaut werden.
+      picker.showModal();
+    } else {
+      // Älterer Browser ohne <dialog>: die Auswahl erscheint einfach in der
+      // Karte statt über ihr. Weniger elegant, aber vollständig bedienbar.
+      picker.setAttribute('open', '');
+      picker.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function closePicker() {
+    if (canUseModal) picker.close();
+    else picker.removeAttribute('open');
+    subscribeBtn.focus();
+  }
+
+  subscribeBtn.addEventListener('click', openPicker);
+  pickerClose.addEventListener('click', closePicker);
+
+  // Klick auf den Hintergrund schließt: Bei einem modalen Dialog trifft der
+  // Klick das dialog-Element selbst, nie ein Kind davon.
+  picker.addEventListener('click', function (event) {
+    if (event.target === picker) closePicker();
+  });
 
   // ---------- Adresse kopieren ----------
 

@@ -25,14 +25,20 @@ describe('landing page', () => {
     assert.match(landingPage, /id="abonnieren"[^>]*data-feed="[^"]+"/);
   });
 
-  test('ships the JavaScript-only controls hidden', () => {
-    // They cannot work before app.js runs, so they must not be visible then.
-    for (const id of ['google-btn', 'outlook-btn', 'copy-btn']) {
-      assert.match(landingPage, new RegExp(`id="${id}"[^>]*hidden`), id);
-    }
+  test('ships the dialog trigger hidden, since it cannot work before app.js runs', () => {
+    assert.match(landingPage, /id="subscribe-btn"[^>]*hidden/);
   });
 
-  test('gives the primary control a real href rather than a dead anchor', () => {
+  test('keeps a working path for visitors without JavaScript', () => {
+    // The dialog never opens without JS, so the noscript block has to carry
+    // both a usable link and the address itself.
+    const noscript = landingPage.match(/<noscript>([\s\S]*?)<\/noscript>/);
+    assert.ok(noscript, 'a noscript block is present');
+    assert.match(noscript[1], /<a href="[^"#]+"/, 'offers a real link');
+    assert.match(noscript[1], /<code[^>]*>[^<]+<\/code>/, 'shows the address');
+  });
+
+  test('gives the Apple option a real href rather than a dead anchor', () => {
     assert.match(landingPage, /id="apple-btn" href="[^"#]+"/);
   });
 });

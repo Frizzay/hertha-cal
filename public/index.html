@@ -54,41 +54,52 @@
              aria-labelledby="abo-title">
       <h2 id="abo-title" class="visually-hidden">Kalender abonnieren</h2>
 
-      <p class="pick">Welchen Kalender nutzt du?</p>
+      <!-- Braucht JavaScript (öffnet den Dialog), startet daher versteckt.
+           Ohne JavaScript übernimmt der noscript-Block weiter unten. -->
+      <button class="subscribe-cta" type="button" id="subscribe-btn" hidden>
+        Kalender abonnieren
+      </button>
+      <p class="hint">Dauert zehn Sekunden. Kein Konto, keine App, keine Cookies.</p>
 
-      <div class="apps">
-        <!-- Echtes href statt "#": ohne JavaScript lädt der Link wenigstens die
-             .ics-Datei herunter, statt gar nichts zu tun. app.js schreibt es
-             danach auf webcal: um. -->
-        <a class="app" id="apple-btn" href="{{FEED_URL}}">
-          <span class="app-name">Apple Kalender</span>
-          <span class="app-note">iPhone, iPad, Mac</span>
-        </a>
-        <!-- Braucht JavaScript für die Adresse, startet daher versteckt. -->
-        <a class="app" id="google-btn" target="_blank" rel="noopener noreferrer" hidden>
-          <span class="app-name">Google Kalender</span>
-          <span class="app-note">am Computer<span class="visually-hidden"> (öffnet in neuem Tab)</span></span>
-        </a>
-        <a class="app" id="outlook-btn" target="_blank" rel="noopener noreferrer" hidden>
-          <span class="app-name">Outlook</span>
-          <span class="app-note">Outlook.com, Microsoft 365<span class="visually-hidden"> (öffnet in neuem Tab)</span></span>
-        </a>
-        <button class="app" type="button" id="copy-btn" hidden>
-          <span class="app-name">Andere App</span>
-          <span class="app-note" id="copy-note">Adresse kopieren</span>
-        </button>
-      </div>
+      <dialog class="picker" id="picker" aria-labelledby="picker-title">
+        <h3 class="picker-title" id="picker-title">Welchen Kalender nutzt du?</h3>
 
-      <p class="hint" id="copy-status" role="status" aria-live="polite"></p>
+        <div class="apps">
+          <a class="app" id="apple-btn" href="{{FEED_URL}}">
+            <span class="app-name">Apple Kalender</span>
+            <span class="app-note">iPhone, iPad, Mac</span>
+          </a>
+          <a class="app" id="google-btn" target="_blank" rel="noopener noreferrer">
+            <span class="app-name">Google Kalender</span>
+            <span class="app-note">am Computer<span class="visually-hidden"> (öffnet in neuem Tab)</span></span>
+          </a>
+          <a class="app" id="outlook-btn" target="_blank" rel="noopener noreferrer">
+            <span class="app-name">Outlook</span>
+            <span class="app-note">Outlook.com, Microsoft 365<span class="visually-hidden"> (öffnet in neuem Tab)</span></span>
+          </a>
+          <button class="app" type="button" id="copy-btn">
+            <span class="app-name">Andere App</span>
+            <span class="app-note" id="copy-note">Adresse kopieren</span>
+          </button>
+        </div>
 
-      <p class="hint">
-        Am Android-Handy nimmt Google Kalender keine Abos an – das geht nur am
-        Computer. Unterwegs also <strong>„Andere App“</strong> tippen und die Adresse
-        später am Rechner einfügen.
-      </p>
+        <p class="hint" id="copy-status" role="status" aria-live="polite"></p>
+
+        <p class="hint">
+          Am Android-Handy nimmt Google Kalender keine Abos an – das geht nur am
+          Computer. Unterwegs also <strong>„Andere App“</strong> tippen und die Adresse
+          später am Rechner einfügen.
+        </p>
+
+        <button class="picker-close" type="button" id="picker-close">Schließen</button>
+      </dialog>
 
       <noscript>
-        <p class="hint">Kalender-Adresse zum Einfügen: <code class="feed-url">{{FEED_URL}}</code></p>
+        <p class="hint">
+          <a href="{{FEED_URL}}">Kalender-Datei öffnen</a> – oder diese Adresse in
+          deiner Kalender-App abonnieren:
+          <code class="feed-url">{{FEED_URL}}</code>
+        </p>
       </noscript>
 
       <ul class="included">
@@ -107,8 +118,8 @@
       </p>
       <ol class="steps">
         <li>
-          <h3>Kalender auswählen</h3>
-          <p>Oben auf die App tippen, die du nutzt. Mehr ist nicht einzustellen.</p>
+          <h3>Auf „Kalender abonnieren“ tippen</h3>
+          <p>Dann die App auswählen, die du nutzt. Mehr ist nicht einzustellen.</p>
         </li>
         <li>
           <h3>Einmal bestätigen</h3>
@@ -121,7 +132,7 @@
       </ol>
 
       <p class="section-note">
-        Steht deine App nicht dabei? „Andere App“ kopiert die Adresse. Einfügen unter
+        Steht deine App nicht in der Auswahl? „Andere App“ kopiert die Adresse. Einfügen unter
         <em>Apple:</em> Kalender → Ablage → Neues Kalenderabo.
         <em>Google:</em> Andere Kalender → Per URL.
         <em>Outlook:</em> Kalender hinzufügen → Aus dem Internet abonnieren.
