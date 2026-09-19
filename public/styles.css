@@ -100,8 +100,37 @@ a:hover { color: var(--accent-hover); }
 
 /* ---------- Hero ---------- */
 
-.hero { padding: clamp(2.5rem, 7vw, 5rem) 0 1rem; }
-.hero .lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--text-muted); max-width: 46ch; }
+.hero {
+  background: linear-gradient(158deg, var(--blue-700) 0%, var(--blue-900) 100%);
+  color: #fff;
+  /* viewport-fit=cover, also muss die Notch-Höhe oben dazu. */
+  padding-top: calc(clamp(2rem, 6vw, 3.25rem) + env(safe-area-inset-top, 0px));
+  /* Unten extra Luft, in die sich die Abo-Karte hineinschiebt. */
+  padding-bottom: clamp(4.5rem, 10vw, 7rem);
+}
+@media (prefers-color-scheme: dark) {
+  .hero { background: linear-gradient(158deg, var(--blue-800) 0%, #050f1b 100%); }
+}
+
+.hero-brand {
+  display: inline-flex; align-items: center; gap: 0.65rem;
+  margin: 0 0 clamp(1.75rem, 5vw, 2.75rem);
+  font-size: 1rem; font-weight: 750; letter-spacing: -0.01em; color: #fff;
+}
+.hero-brand svg { display: block; flex: none; }
+
+.hero h1 {
+  color: #fff;
+  margin: 0 0 1rem;
+  max-width: 20ch;
+}
+
+.hero-lead {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  color: #cfe1f6;
+  max-width: 46ch;
+}
 
 /* ---------- Karten ---------- */
 
@@ -113,7 +142,12 @@ a:hover { color: var(--accent-hover); }
   padding: clamp(1.15rem, 3vw, 1.75rem);
 }
 
-.subscribe { margin-top: 2rem; }
+/* Schiebt sich in die untere Kante des Hero hinein. */
+.subscribe {
+  margin-top: clamp(-4rem, -6vw, -2.25rem);
+  position: relative;
+  z-index: 1;
+}
 .field-label { font-weight: 650; font-size: 0.95rem; display: block; margin-bottom: 0.45rem; }
 
 .url-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
